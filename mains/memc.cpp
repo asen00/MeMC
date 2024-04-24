@@ -148,9 +148,8 @@ int main(int argc, char *argv[]){
     RandomGenerator::init(42);
     //
     //
-
     cout << "# ID for this process is: " << pid << endl;
-    outfolder = ZeroPadNumber(mpi_rank+atoi(argv[1]))+"/";
+    outfolder = ZeroPadNumber(mpi_rank)+"/";
     cout << "# I am in folder "+ outfolder << endl;
     filename = outfolder + "/para_file.in";
 
@@ -162,9 +161,7 @@ int main(int argc, char *argv[]){
     // read the input file
     init_read_parameters(&mbrane_para, &mc_para, &area_para, &fld_para, &vol_para,
             &stick_para, &afm_para,  &act_para, &spring_para, filename);
-
     mc_para.one_mc_iter = 2*mbrane_para.N;
-
 
    // check whether the string comparison works
    /* define all the paras */
