@@ -323,11 +323,10 @@ void write_parameters(MBRANE_p mbrane, MC_p mc_para, AREA_p area_para, FLUID_p f
 
     out_.close();
 }
-
 void init_KK_0(double *KK, AREA_p area_p, MESH_p mesh, int N){
     int i, k;
     int num_nbr, cm_idx;
-    double kk_t = area_p.YY;
+    double kk_t = area_p.YY*sqrt(3)/2;
     int mpi_err, mpi_rank;
     double rndg;
     /* std::cout << "Gaussian Random Number: " << gaussianNumber << std::endl; */
@@ -338,7 +337,8 @@ void init_KK_0(double *KK, AREA_p area_p, MESH_p mesh, int N){
         cm_idx = mesh.nghst * i;
         for(k = cm_idx; k < cm_idx + num_nbr; k++) {
             // rndg = RandomGenerator::generateGaussian(0.0,1.0);
-            KK[k] = kk_t + sqrt(kk_t)*rndg*0.5; //rand_real(rng2);
+            KK[k] = kk_t
+            // + sqrt(kk_t)*rndg*0.5; //rand_real(rng2);
             /* printf("%d  %lf \n", mpi_rank, KK[k]); */
         }
     }
