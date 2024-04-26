@@ -2,14 +2,13 @@
 #include "subroutine.h"
 #define sign(x) ((x > 0) ? 1 : ((x < 0) ? -1 : 0))
 double cotangent(Vec3d si, Vec3d sk, Vec3d sj){
-     ///
-     ///  @param si  coordinate of ith point
-     ///  @param sk  coordinate of kth point
-     ///  @param sj  coordinate of jth point 
-     
-     ///  @return   ({si-sk}.{sj-sk})/sqrt(({si-sk}x{sj-sk})^2)
-     /// angle between vector si and sj
-     ///
+    ///
+    ///  @param si  coordinate of ith point
+    ///  @param sk  coordinate of kth point
+    ///  @param sj  coordinate of jth point 
+    ///  @return   ({si-sk}.{sj-sk})/sqrt(({si-sk}x{sj-sk})^2)
+    /// angle between vector si and sj
+    ///
     Vec3d drik, drjk, cross;
     double cot_theta;  
     double inner_prod;
@@ -24,26 +23,21 @@ double cotangent(Vec3d si, Vec3d sk, Vec3d sj){
 }
 //
 double cotangent(double a, double b, double c){
-
-     /// @brief  a, b, c are the length of the sides of a triangle 
-     
-     ///  @return   0.25*(a*a+b*b-c*c)/area; where area is the area of triangle
+    /// @brief  a, b, c are the length of the sides of a triangle  
+    ///  @return   0.25*(a*a+b*b-c*c)/area; where area is the area of triangle
     double s = 0.5*(a+b+c);
     double area = sqrt(s*(s-a)*(s-b)*(s-c));
     double cot_theta=0.25*(a*a+b*b-c*c)/area;
     return cot_theta;
 }
-
+//
 Vec3d determine_xyz_parabola(Vec3d pos, AFM_p afm) {
     ///
-     ///  @param pos  position of a point in membrane
-     ///  @param afm  parameters of AFM tip
-     //
-     /// 
-     ///  @return  position of point on afm tip nearest to pos 
-     ///
-
-
+    ///  @param pos  position of a point in membrane
+    ///  @param afm  parameters of AFM tip
+    //
+    /// 
+    ///  @return  position of point on afm tip nearest to pos 
     int nroot;
     double a, b, c, d;
     double a0, c0;
@@ -161,11 +155,9 @@ double volume_ipart(Vec3d *pos, int *node_nbr,
     volume1 = volume1/3e0;
     return volume1;
 }
-
- double stretch_energy_ipart(Vec3d *pos,
+double stretch_energy_ipart(Vec3d *pos,
          int *node_nbr, double *lij_t0, double *KK,
          int num_nbr, int idx, AREA_p para){
-
     /// @brief Estimate the Stretching energy contribution when ith particle position changes
     ///  @param Pos array containing co-ordinates of all the particles
     ///  @param idx index of ith particle;
@@ -174,9 +166,6 @@ double volume_ipart(Vec3d *pos, int *node_nbr,
     ///  @param num_nbr number of nearest neigbours of idx; 
     ///  @param para  Membrane related parameters;
     /// @return Stretching Energy contribution when ith particle is displaced 
-
-
-    //
     double HH;
     double idx_ener;
     Vec3d rij;
@@ -190,13 +179,10 @@ double volume_ipart(Vec3d *pos, int *node_nbr,
         j = node_nbr[i];
         rij = pos[idx] - pos[j];
         mod_rij = sqrt(inner_product(rij, rij));
-        //
         idx_ener = idx_ener + KK[i]*(mod_rij - lij_t0[i])*(mod_rij - lij_t0[i]);
     }
-    //
     return 0.5*idx_ener;
 }
-
 //
 //Q. Given two cotangent angles, it returns either the area due to perpendicular bisector,
 // or the barycenter.
@@ -336,44 +322,30 @@ Vec2d bending_energy_ipart_neighbour(Vec3d *pos,
    
    }
    return be_artot;
-} 
-
-
- double area_total(Vec3d *pos, MESH_p mesh,
-         MBRANE_p para){
-     ///  @param Pos array containing co-ordinates of all the particles
-     ///  @param mesh mesh related parameters -- connections and neighbours
-     /// information;
-     ///  @param para  Membrane related parameters;
-     /// @return Total volume of the shell
-
-
-     int idx, st_idx;
-     int num_nbr, cm_idx;
-     double area;
-     Vec2d be_ar;
-
-
-     st_idx = get_nstart(para.N, para.bdry_type);
-     area = 0e0;
-     for(idx = 0; idx < para.N; idx++){
-         /* idx = 2; */
-         cm_idx = idx*mesh.nghst;
-         num_nbr = mesh.numnbr[idx];
-
-         /* be_ar = bending_energy_ipart(pos, */
-         /*         (int *) (mesh.node_nbr_list + cm_idx), */
-         /*          num_nbr, idx, para); */
-         /* area += be_ar.y; */
-         area += area_ipart(pos,  
-                 (int *) (mesh.node_nbr_list + cm_idx),
-                 num_nbr, idx);
-     }
-     return area/3;
 }
-
-
- double volume_total(Vec3d *pos, MESH_p mesh,
+double area_total(Vec3d *pos, MESH_p mesh,
+         MBRANE_p para){
+    ///  @param Pos array containing co-ordinates of all the particles
+    ///  @param mesh mesh related parameters -- connections and neighbours
+    /// information;
+    ///  @param para  Membrane related parameters;
+    /// @return Total volume of the shell
+    int idx;
+    int num_nbr, cm_idx;
+    double area;
+    Vec2d be_ar;
+    area = 0e0;
+    for(idx = 0; idx < para.N; idx++){
+        cm_idx = idx*mesh.nghst;
+        num_nbr = mesh.numnbr[idx];
+        area += area_ipart(pos,  
+                (int *) (mesh.node_nbr_list + cm_idx),
+                num_nbr, idx);
+    }
+    return area/3;
+}
+//
+double volume_total(Vec3d *pos, MESH_p mesh,
          MBRANE_p para){
      /// @brief Estimate the total volume of the shell
      ///  @param Pos array containing co-ordinates of all the particles
@@ -399,73 +371,61 @@ Vec2d bending_energy_ipart_neighbour(Vec3d *pos,
      }
      return vol/3e0;
 }
-
-
- double bending_energy_total(Vec3d *pos, MESH_p mesh, 
+//
+double bending_energy_total(Vec3d *pos, MESH_p mesh, 
          MBRANE_p para){
-
-     /// @brief Estimate the total Bending energy
-     ///  @param Pos array containing co-ordinates of all the particles
-     ///  @param mesh mesh related parameters -- connections and neighbours
-     /// information;
-     ///  @param para  Membrane related parameters;
-     /// @return Total Bending energy
-
-
-     int idx, st_idx;
-     int num_nbr, cm_idx;
-     double be;
-     Vec2d be_ar;
-
-     be = 0e0;
-     st_idx = get_nstart(para.N, para.bdry_type);
-     for(idx = st_idx; idx < para.N; idx++){
-         /* idx = 2; */
-
-         cm_idx = idx*mesh.nghst;
-         num_nbr = mesh.numnbr[idx];
-
-         be_ar = bending_energy_ipart(pos,
-                 (int *) (mesh.node_nbr_list + cm_idx),
-                  num_nbr, idx, para);
-         be = be + be_ar.x;
-     }
-     return be;
+    /// @brief Estimate the total Bending energy
+    ///  @param Pos array containing co-ordinates of all the particles
+    ///  @param mesh mesh related parameters -- connections and neighbours
+    /// information;
+    ///  @param para  Membrane related parameters;
+    /// @return Total Bending energy
+    int idx, st_idx;
+    int num_nbr, cm_idx;
+    double be;
+    Vec2d be_ar;
+    be = 0e0;
+    st_idx = get_nstart(para.N, para.bdry_type);
+    for(idx = st_idx; idx < para.N; idx++){
+        cm_idx = idx*mesh.nghst;
+        num_nbr = mesh.numnbr[idx];
+        be_ar = bending_energy_ipart(pos,
+                (int *) (mesh.node_nbr_list + cm_idx),
+                num_nbr, idx, para);
+        be = be + be_ar.x;
+    }
+    return be;
 }
-
-
- double stretch_energy_total(Vec3d *pos,
-       MESH_p mesh, double *lij_t0, double *KK_, MBRANE_p para, AREA_p area_p){
-
+//
+double stretch_energy_total(Vec3d *pos,
+    MESH_p mesh, double *lij_t0, double *KK_, MBRANE_p para, AREA_p area_p){
     /// @brief Estimate the total Stretching energy  
     ///  @param Pos array containing co-ordinates of all the particles
     ///  @param mesh mesh related parameters -- connections and neighbours
-    /// information; 
+    /// information;
     /// @param lij_t0 initial distance between points of membrane
     ///  @param para  Membrane related parameters;
-    /// @return Total Stretching energy 
-
-
+    /// @return Total Stretching energy
+    //
     int idx, st_idx;
     int num_nbr, cm_idx;
     double se;
-
+    //
     st_idx = get_nstart(para.N, para.bdry_type);
     se = 0e0;
     for(idx = st_idx; idx < para.N; idx++){
         /* idx = 2; */
         num_nbr = mesh.numnbr[idx];
         cm_idx = idx*mesh.nghst;
-
+        //
         se += stretch_energy_ipart(pos,
-                 (int *) (mesh.node_nbr_list + cm_idx),
-                 (double *) (lij_t0 + cm_idx), (double *) (KK_ + cm_idx), num_nbr,
-                 idx, area_p);
-
+                (int *) (mesh.node_nbr_list + cm_idx),
+                (double *) (lij_t0 + cm_idx), (double *) (KK_ + cm_idx), num_nbr,
+                idx, area_p);
         /* printf( "stretch: %lf \n", se); */
     }
     return se*0.5e0;
- }
+}
 
 
 double lj_rep(double sqdr, double eps){

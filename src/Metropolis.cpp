@@ -215,7 +215,7 @@ int monte_carlo_3d(Vec3d *pos, MESH_p mesh, double *lij_t0, double *KK,
   move = 0;
   //
   for (i = 0; i < mcpara.one_mc_iter; i++) {
-     int idx =  RandomGenerator::intUniform(nframe, mbrane.N - 1);
+    int idx =  RandomGenerator::intUniform(nframe, mbrane.N - 1);
       /* int idx = rand_int(rng); */
       cm_idx = mesh.nghst * idx;
       num_nbr = mesh.numnbr[idx];

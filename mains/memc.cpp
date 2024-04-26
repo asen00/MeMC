@@ -46,7 +46,8 @@ void diag_wHeader(MBRANE_p mbrane_para, AREA_p area_para, STICK_p stick_para,
     if(stick_para.do_stick){log_headers+="stick_e ";}
     if(afm_para.do_afm){log_headers+="afm_e ";}
     if (spring_para.do_spring){log_headers+="spring_e ";}
-    if(vol_para.do_volume && !vol_para.is_pressurized) {log_headers+="vol_e ";}
+    if(vol_para.do_volume && !vol_para.is_pressurized && mbrane_para.bdry_type!=1)
+    {log_headers+="vol_e ";}
     if (vol_para.do_volume && vol_para.is_pressurized){log_headers+="pressure_e ";}
     if (afm_para.do_afm){log_headers+="afm_fx, afm_fy afm_fz ";}
     if (spring_para.do_spring){log_headers+="spr_force_n.z spr_force_s.z ";}
@@ -150,7 +151,7 @@ int main(int argc, char *argv[]){
     //
 
     cout << "# ID for this process is: " << pid << endl;
-    outfolder = ZeroPadNumber(mpi_rank+atoi(argv[1]))+"/";
+    outfolder = ZeroPadNumber(mpi_rank)+"/";
     cout << "# I am in folder "+ outfolder << endl;
     filename = outfolder + "/para_file.in";
 
@@ -158,16 +159,12 @@ int main(int argc, char *argv[]){
     fstream outfile_terminal(outfolder+"/terminal.out", ios::app);
     outfile_terminal << "The seed is  " << seed_v << endl; 
     /*************************************************/
-
     // read the input file
     init_read_parameters(&mbrane_para, &mc_para, &area_para, &fld_para, &vol_para,
             &stick_para, &afm_para,  &act_para, &spring_para, filename);
-
     mc_para.one_mc_iter = 2*mbrane_para.N;
-
-
-   // check whether the string comparison works
-   /* define all the paras */
+    // check whether the string comparison works
+    /* define all the paras */
     mbrane_para.volume =  (double*)malloc(sizeof(double));
     *mbrane_para.volume = (4./3.)*pi*pow(mbrane_para.radius,3);
     act_para.activity = (double *)calloc(mbrane_para.N, sizeof(double));
@@ -184,7 +181,6 @@ int main(int argc, char *argv[]){
     lij_t0 = (double *)calloc(mesh.nghst*mbrane_para.N, sizeof(double));
     KK_  = (double *)calloc(mesh.nghst*mbrane_para.N, sizeof(double));
     stick_para.is_attractive = (bool *)calloc(mbrane_para.N, sizeof(bool));
-
     //
     if(!mc_para.is_restart && afm_para.do_afm){
         s_t = afm_para.sigma; 
@@ -192,16 +188,14 @@ int main(int argc, char *argv[]){
         e_t = afm_para.epsilon;
         afm_para.epsilon = 0.0;
     }
-   int *poleidx;
-    poleidx = start_simulation(Pos, mesh, lij_t0, 
-                     mbrane_para,  mc_para,  stick_para,
-                     vol_para,  afm_para,  act_para, 
-                     spring_para,  fld_para,  outfolder);
-   mesh.nPole = poleidx[0];
-   mesh.sPole = poleidx[1];
-   init_KK_0(KK_, area_para, mesh, mbrane_para.N);
-    //
-    //
+    int *poleidx;
+    poleidx = start_simulation(Pos, mesh, lij_t0,
+                    mbrane_para,  mc_para,  stick_para,
+                    vol_para,  afm_para,  act_para, 
+                    spring_para,  fld_para,  outfolder);
+    mesh.nPole = poleidx[0];
+    mesh.sPole = poleidx[1];
+    init_KK_0(KK_, area_para, mesh, mbrane_para.N);
     if(fld_para.is_fluid)mbrane_para.av_bond_len = lij_t0[0];
     log_file=outfolder+"/mc_log";
     fid = fopen(log_file.c_str(), "w");
@@ -209,8 +203,6 @@ int main(int argc, char *argv[]){
     if(!mc_para.is_restart)
     diag_wHeader(mbrane_para, area_para,  stick_para,  vol_para,  afm_para,  act_para, 
          spring_para, fid );
-
-
 
     fprintf(fid , "%d %g", 0, 0.0 );
     Ener_t = diag_energies(Et, Pos,  mesh, lij_t0, KK_,  mbrane_para, area_para,  stick_para,
@@ -228,7 +220,6 @@ int main(int argc, char *argv[]){
     num_moves = 0;
     start_time = MPI_Wtime();
     for(iter=0; iter < mc_para.tot_mc_iter; iter++){
-
         if(iter%mc_para.dump_skip == 0){
             outfile=outfolder+"/snap_"+ZeroPadNumber(iter/mc_para.dump_skip)+".h5";
             hdf5_io_write_pos((double*) Pos, 3*mbrane_para.N, outfile);
@@ -261,7 +252,6 @@ int main(int argc, char *argv[]){
             << (double) num_moves*100/mc_para.one_mc_iter << " %;"<<  
             " totalener = "<< mbrane_para.tot_energy[0] << "; volume = " << *mbrane_para.volume <<
             "Area = "<< *mbrane_para.area << endl;
-
     }
     end_time = MPI_Wtime();
     if(mpi_rank == 0){
@@ -269,7 +259,6 @@ int main(int argc, char *argv[]){
         fprintf(stderr, "Time for %d montecarlo steps = %g min \n", mc_para.tot_mc_iter, (end_time-start_time)/60.0);
         fprintf(stderr, "\n---------\n");
     }
-
     fclose(fid);
     free(Pos);
     free(lij_t0);
