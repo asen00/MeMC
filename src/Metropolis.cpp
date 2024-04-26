@@ -364,8 +364,7 @@ int monte_carlo_surf2d(Vec2d *Pos, Nbh_list *neib, LJ_p para, MC_p mcpara,
   return move;
 }
 
-int monte_carlo_fluid(Vec3d *pos, MESH_p mesh, MBRANE_p mbrane, MC_p mcpara, FLUID_p fl_para) {
-
+int monte_carlo_fluid(Vec3d *pos, MESH_p mesh, MBRANE_p mbrane, MC_p mcpara, FLUID_p fl_para){
   /// @brief Monte-Carlo routine for the membrane
   ///  @param Pos array containing co-ordinates of all the particles
   ///  @param mesh mesh related parameters -- connections and neighbours
@@ -376,7 +375,6 @@ int monte_carlo_fluid(Vec3d *pos, MESH_p mesh, MBRANE_p mbrane, MC_p mcpara, FLU
   /// @param mcpara Monte-Carlo related parameters
   /// @param AFM afm related parameter
   /// @return number of accepted moves
-
   int i, j, move;
   int nnbr_del1;
   int cm_idx_del1, cm_idx_del2;
@@ -384,28 +382,24 @@ int monte_carlo_fluid(Vec3d *pos, MESH_p mesh, MBRANE_p mbrane, MC_p mcpara, FLU
   int idx_del1, idx_del2;
   int idx_add1, idx_add2;
   int nframe;
-
+  //
   int nbr_add_1[12], nbr_add_2[12];
   int nbr_del_1[12], nbr_del_2[12];
-
+  //
   int N_nbr_del2, N_nbr_del1;
   int N_nbr_add2, N_nbr_add1;
   double det1, det2;
   Vec3d bef_ij, aft_ij;
-
+  //
   double kappa;
   bool yes, logic;
-
+  //
   nframe = get_nstart(mbrane.N, mbrane.bdry_type);
-
-/*   std::uniform_int_distribution<uint32_t> rand_int(nframe, mbrane.N - 1); */
-/*   std::uniform_int_distribution<uint32_t> rand_nbr(0, mesh.nghst - 1); */
-/*   std::uniform_real_distribution<> rand_real(-1, 1); */
-
+  /*   std::uniform_int_distribution<uint32_t> rand_int(nframe, mbrane.N - 1); */
+  /*   std::uniform_int_distribution<uint32_t> rand_nbr(0, mesh.nghst - 1); */
+  /*   std::uniform_real_distribution<> rand_real(-1, 1); */
   move = 0;
-
   int idxn, up, down;
-
   for (i = 0; i < mcpara.one_mc_iter; i++) {
     // identify the pair to be divorced
     // stored as idx_del1 and idx_del2
@@ -427,70 +421,72 @@ int monte_carlo_fluid(Vec3d *pos, MESH_p mesh, MBRANE_p mbrane, MC_p mcpara, FLU
         logic = false;
       }
     }
-
     /* det1 = determinant(pos[idx_add1], pos[idx_add2], pos[idx_del1], mbrane.len); */
     /* det2 = determinant(pos[idx_add1], pos[idx_add2], pos[idx_del2], mbrane.len); */
     cm_idx_add1 = mesh.nghst * idx_add1;
     cm_idx_add2 = mesh.nghst * idx_add2;
 
-        /* if (det1 * det2 < 0.0) { */
-      aft_ij = pos[idx_add2] - pos[idx_add1];
-      double dl = norm(aft_ij);
+    /* if (det1 * det2 < 0.0) { */
+    aft_ij = pos[idx_add2] - pos[idx_add1];
+    double dl = norm(aft_ij);
 
-      N_nbr_del1 = mesh.numnbr[idx_del1];
-      N_nbr_del2 = mesh.numnbr[idx_del2];
+    N_nbr_del1 = mesh.numnbr[idx_del1];
+    N_nbr_del2 = mesh.numnbr[idx_del2];
+    
+    N_nbr_add1 = mesh.numnbr[idx_add1];
+    N_nbr_add2 = mesh.numnbr[idx_add2];
 
-      bool flip_condt1, flip_condt2, flip_condt3;
-      bool accept_flip;
+    bool flip_condt1, flip_condt2, flip_condt3;
+    bool accept_flip;
 
-      flip_condt1 = (dl < fl_para.fac_len_vertices*mbrane.av_bond_len);
-      flip_condt2 =  N_nbr_del1 > fl_para.min_allowed_nbr && N_nbr_del2 > fl_para.min_allowed_nbr;
-      flip_condt3 =  N_nbr_add1 < 9 && N_nbr_add2 < 9;
+    flip_condt1 = (dl < fl_para.fac_len_vertices*mbrane.av_bond_len);
+    flip_condt2 =  N_nbr_del1 > fl_para.min_allowed_nbr && N_nbr_del2 > fl_para.min_allowed_nbr;
+    flip_condt3 =  N_nbr_add1 < 9 && N_nbr_add2 < 9;
 
-      accept_flip = flip_condt1 && flip_condt2 && flip_condt3;
+    accept_flip = flip_condt1 && flip_condt2 && flip_condt3;
+    // cout << dl << fl_para.fac_len_vertices*mbrane.av_bond_len << endl;
+    if (accept_flip) {
+      move = move + 1;
+      /* print_sanity(pos, mesh.node_nbr_list+cm_idx_del1,
+       * mesh.node_nbr_list+cm_idx_del2, */
+      /*         mesh.node_nbr_list+cm_idx_add1,
+       * mesh.node_nbr_list+cm_idx_add2, */
+      /*         idx_del1, idx_del2, idx_add1, idx_add2, (char*)"bef", i); */
 
-      if (accept_flip) {
-        move = move + 1;
-        /* print_sanity(pos, mesh.node_nbr_list+cm_idx_del1,
-         * mesh.node_nbr_list+cm_idx_del2, */
-        /*         mesh.node_nbr_list+cm_idx_add1,
-         * mesh.node_nbr_list+cm_idx_add2, */
-        /*         idx_del1, idx_del2, idx_add1, idx_add2, (char*)"bef", i); */
+      memcpy(nbr_del_1, &mesh.node_nbr_list[cm_idx_del1],
+             sizeof(int) * mesh.nghst);
+      memcpy(nbr_del_2, &mesh.node_nbr_list[cm_idx_del2],
+             sizeof(int) * mesh.nghst);
+      memcpy(nbr_add_1, &mesh.node_nbr_list[cm_idx_add1],
+             sizeof(int) * mesh.nghst);
+      memcpy(nbr_add_2, &mesh.node_nbr_list[cm_idx_add2],
+             sizeof(int) * mesh.nghst);
 
-        memcpy(nbr_del_1, &mesh.node_nbr_list[cm_idx_del1],
-               sizeof(int) * mesh.nghst);
-        memcpy(nbr_del_2, &mesh.node_nbr_list[cm_idx_del2],
-               sizeof(int) * mesh.nghst);
-        memcpy(nbr_add_1, &mesh.node_nbr_list[cm_idx_add1],
-               sizeof(int) * mesh.nghst);
-        memcpy(nbr_add_2, &mesh.node_nbr_list[cm_idx_add2],
-               sizeof(int) * mesh.nghst);
+      // form the bond
+      N_nbr_add1 = add_nbr(nbr_add_1, mesh.numnbr[idx_add1], idx_add2,
+                           idx_del1, idx_del2);
+      N_nbr_add2 = add_nbr(nbr_add_2, mesh.numnbr[idx_add2], idx_add1,
+                           idx_del1, idx_del2);
 
-        // form the bond
-        N_nbr_add1 = add_nbr(nbr_add_1, mesh.numnbr[idx_add1], idx_add2,
-                             idx_del1, idx_del2);
-        N_nbr_add2 = add_nbr(nbr_add_2, mesh.numnbr[idx_add2], idx_add1,
-                             idx_del1, idx_del2);
+      // get divorced
+      N_nbr_del1 = del_nbr(nbr_del_1, mesh.numnbr[idx_del1], idx_del2);
+      N_nbr_del2 = del_nbr(nbr_del_2, mesh.numnbr[idx_del2], idx_del1);
 
-        // get divorced
-        N_nbr_del1 = del_nbr(nbr_del_1, mesh.numnbr[idx_del1], idx_del2);
-        N_nbr_del2 = del_nbr(nbr_del_2, mesh.numnbr[idx_del2], idx_del1);
+      memcpy(mesh.node_nbr_list + cm_idx_del1, &nbr_del_1,
+             sizeof(int) * mesh.nghst);
+      memcpy(mesh.node_nbr_list + cm_idx_del2, &nbr_del_2,
+             sizeof(int) * mesh.nghst);
+      mesh.numnbr[idx_del1] = N_nbr_del1;
+      mesh.numnbr[idx_del2] = N_nbr_del2;
 
-        memcpy(mesh.node_nbr_list + cm_idx_del1, &nbr_del_1,
-               sizeof(int) * mesh.nghst);
-        memcpy(mesh.node_nbr_list + cm_idx_del2, &nbr_del_2,
-               sizeof(int) * mesh.nghst);
-        mesh.numnbr[idx_del1] = N_nbr_del1;
-        mesh.numnbr[idx_del2] = N_nbr_del2;
-
-        memcpy(mesh.node_nbr_list + cm_idx_add1, &nbr_add_1,
-               sizeof(int) * mesh.nghst);
-        memcpy(mesh.node_nbr_list + cm_idx_add2, &nbr_add_2,
-               sizeof(int) * mesh.nghst);
-        mesh.numnbr[idx_add1] = N_nbr_add1;
-        mesh.numnbr[idx_add2] = N_nbr_add2;
-            /* exit(0); */
-      }
+      memcpy(mesh.node_nbr_list + cm_idx_add1, &nbr_add_1,
+             sizeof(int) * mesh.nghst);
+      memcpy(mesh.node_nbr_list + cm_idx_add2, &nbr_add_2,
+             sizeof(int) * mesh.nghst);
+      mesh.numnbr[idx_add1] = N_nbr_add1;
+      mesh.numnbr[idx_add2] = N_nbr_add2;
+          /* exit(0); */
+    }
     /* } */
   }
   return move;
