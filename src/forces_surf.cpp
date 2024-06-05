@@ -42,8 +42,6 @@ Vec3d determine_xyz_parabola(Vec3d pos, AFM_p afm) {
      /// 
      ///  @return  position of point on afm tip nearest to pos 
      ///
-
-
     int nroot;
     double a, b, c, d;
     double a0, c0;
@@ -122,8 +120,7 @@ double area_ipart(Vec3d *pos, int *node_nbr,
     }
     return area1;
 }
-
-
+//
 double volume_ipart(Vec3d *pos, int *node_nbr,
         int num_nbr, int idx){
      /// @brief Estimate the volume substended by voronoi area of the ith particle
@@ -133,15 +130,13 @@ double volume_ipart(Vec3d *pos, int *node_nbr,
      ///  @param num_nbr number of nearest neigbours of idx; 
      ///  @param para  Membrane related parameters;
      /// @return Volume substended by ith particle.
-
-
     int i, j, k;
     double volume1;
     Vec3d area1, area2, rk, ri, rj, rkp;
     Vec3d rij, rijk, rik, rjkp;
     Vec3d rijkp;
     Vec3d rjk, pt; 
-
+    //
     volume1 = 0e0;
     ri = pos[idx];
     for (i =0; i < num_nbr; i++){
@@ -161,8 +156,8 @@ double volume_ipart(Vec3d *pos, int *node_nbr,
     volume1 = volume1/3e0;
     return volume1;
 }
-
- double stretch_energy_ipart(Vec3d *pos,
+//
+double stretch_energy_ipart(Vec3d *pos,
          int *node_nbr, double *lij_t0, double *KK,
          int num_nbr, int idx, AREA_p para){
 
@@ -174,8 +169,6 @@ double volume_ipart(Vec3d *pos, int *node_nbr,
     ///  @param num_nbr number of nearest neigbours of idx; 
     ///  @param para  Membrane related parameters;
     /// @return Stretching Energy contribution when ith particle is displaced 
-
-
     //
     double HH;
     double idx_ener;
@@ -196,7 +189,6 @@ double volume_ipart(Vec3d *pos, int *node_nbr,
     //
     return 0.5*idx_ener;
 }
-
 //
 //Q. Given two cotangent angles, it returns either the area due to perpendicular bisector,
 // or the barycenter.
@@ -210,9 +202,7 @@ double voronoi_area(double cotJ, double cotK,
     /// @param ksq square of the length of bond i-j  
     ///  @param area area of the triangle 
     /// @return  Given two cotangent angles, it returns either the area due to perpendicular bisector,
-/// or the barycenter.
-
-
+    /// or the barycenter.
     double sigma;
     if (cotJ>0 && cotK>0){
         if (cotJ*cotK<1){
@@ -238,73 +228,106 @@ Vec2d bending_energy_ipart(Vec3d *pos, int *node_nbr, int num_nbr,
     ///  @param para  Membrane related parameters;
     /// @todo try openMP Pragmas;
     /// @return Bending Energy contribution when ith particle is displaced 
-
     double bend_ener,sigma_i;
     Vec3d cot_times_rij;
     double BB=para.coef_bend;
     double curv_t0 = para.sp_curv;
-    // lap_bel:Laplace Beltrami operator for sphere is 2\kappa\nhat
-    // nhat is outward normal.
     Vec3d lap_bel,lap_bel_t0,nhat;
     Vec2d be_ar;
     //
-    double cot_jdx_k,cot_jdx_kp,cot_kdx,cot_kpdx;
-    double area_ijk,area_ijkp;
-    double lijsq,liksq,ljksq,likpsq,ljkpsq;
-    // Vec3d cot_times_rij;
-    Vec3d xij,xik,xjk,xikp,xjkp,nhat_local,xijp1;
+    // double cot_aij[num_nbr],cot_bij[num_nbr], area_ijk[num_nbr];
+    // double lijsq[num_nbr],ljksq[num_nbr];
+    // Vec3d xij[num_nbr],xjk[num_nbr],
+    //
+    double cot_aij[num_nbr],cot_bij[num_nbr], area_ijk1[num_nbr];
+    double lijsq1[num_nbr],ljksq1[num_nbr];
+    Vec3d xij1[num_nbr],xjk1[num_nbr];
+    //
+    // double area_ijk;
+    // double lijsq,ljksq;
+    // Vec3d xij,xjk;
+    //
+    double cot_jdx_k,cot_jdx_kp,cot_kdx,cot_kpdx,area_ijkp;
+    Vec3d xik,xikp,xjkp,nhat_local,xijp1;
     int jdx,kdx,kpdx,jdxp1;
-    double cot_sum;
+    double cot_sum,liksq,likpsq,ljkpsq;
     sigma_i = 0e0;
-    for (int j = 0; j < num_nbr; j++){
+    // store all the lengths
+    for (int j = 0; j < num_nbr; ++j){
         jdx = node_nbr[j];
-        jdxp1=node_nbr[(j+1)%num_nbr];
+        kdx = node_nbr[(j+1)%num_nbr]; // this is same as kdx
+        xij1[j] = pos[idx]- pos[jdx];
+        xjk1[j] = pos[jdx]- pos[kdx];
+        lijsq1[j] = inner_product(xij1[j],xij1[j]);
+        ljksq1[j] = inner_product(xjk1[j],xjk1[j]);
+        area_ijk1[j] = 0.5*norm(cross_product(xij1[j],xjk1[j]));
+    }
+    // Now compute all the angles
+    for (int j = 0; j < num_nbr; ++j){
+        liksq=lijsq1[(j+1)%num_nbr];
+        likpsq=lijsq1[(j-1+num_nbr)%num_nbr];
+        ljkpsq=ljksq1[(j-1+num_nbr)%num_nbr];
+        area_ijkp=area_ijk1[(j-1+num_nbr)%num_nbr];
         //
-        /* kdx  = bond_nbr[j].i1; */
-        kdx = node_nbr[(j+1+num_nbr)%num_nbr];
-        /* kpdx = bond_nbr[j].i2; */
-        kpdx = node_nbr[(j-1+num_nbr)%num_nbr];
+        cot_aij[j] = 0.25*(ljkpsq+likpsq-lijsq1[j])/area_ijkp;
+        cot_bij[j] = 0.25*(ljksq1[j]+liksq-lijsq1[j])/area_ijk1[j];
+    }
+    //
+    for (int j = 0; j < num_nbr; j++){
+        // jdx = node_nbr[j];
+        // jdxp1=node_nbr[(j+1)%num_nbr];
+        // kdx = node_nbr[(j+1+num_nbr)%num_nbr];
+        // kpdx = node_nbr[(j-1+num_nbr)%num_nbr];
+        // //
+        // xij = pos[idx]- pos[jdx];
+        // xijp1 = pos[idx]- pos[jdxp1];
+        // xik = pos[idx]- pos[kdx];
+        // xjk = pos[jdx]- pos[kdx]; 
+        // xikp = pos[idx]- pos[kpdx];
+        // xjkp = pos[jdx]- pos[kpdx];
+        // //
+        // lijsq = inner_product(xij,xij);
+        // liksq = inner_product(xik,xik);
+        // ljksq = inner_product(xjk,xjk);
+        // likpsq = inner_product(xikp,xikp);
+        // ljkpsq = inner_product(xjkp,xjkp);
+        // //
+        // area_ijk = 0.5*norm(cross_product(xij,xjk));
+        // area_ijkp = 0.5*norm(cross_product(xij,xjkp));
+        // //
+        // cot_jdx_k = 0.25*(lijsq+ljksq-liksq)/area_ijk;
+        // cot_kdx = 0.25*(ljksq+liksq-lijsq)/area_ijk;
+        // cot_jdx_kp = 0.25*(lijsq+ljkpsq-likpsq)/area_ijkp;
+        // cot_kpdx =  0.25*(ljkpsq+likpsq-lijsq)/area_ijkp;
+        // cot_sum = 0.5*(cot_kdx+cot_kpdx);
         //
-        xij = pos[idx]- pos[jdx];
-        xijp1 = pos[idx]- pos[jdxp1];
-        xik = pos[idx]- pos[kdx];
-        xjk = pos[jdx]- pos[kdx]; 
-        xikp = pos[idx]- pos[kpdx];
-        xjkp = pos[jdx]- pos[kpdx];
-        //
-       //
-        lijsq = inner_product(xij,xij);
-        liksq = inner_product(xik,xik);
-        ljksq = inner_product(xjk,xjk);
-        likpsq = inner_product(xikp,xikp);
-        ljkpsq = inner_product(xjkp,xjkp);
-        //
-        area_ijk = 0.5*norm(cross_product(xij,xjk));
-        area_ijkp = 0.5*norm(cross_product(xij,xjkp));
-        //
-        cot_jdx_k = 0.25*(lijsq+ljksq-liksq)/area_ijk;
-        cot_kdx = 0.25*(ljksq+liksq-lijsq)/area_ijk;
-        // cot_idx_k = 0.25*(lijsq+liksq-ljksq)/area_ijk;
-        //
-        cot_jdx_kp = 0.25*(lijsq+ljkpsq-likpsq)/area_ijkp;
-        cot_kpdx =  0.25*(ljkpsq+likpsq-lijsq)/area_ijkp;
-        cot_sum = 0.5*(cot_kdx+cot_kpdx);
-        cot_times_rij = Vec3d_add(cot_times_rij, xij, cot_sum);
-        sigma_i=sigma_i+voronoi_area(cot_jdx_k,cot_kdx,liksq,lijsq,area_ijk);
-        sigma_i=sigma_i+voronoi_area(cot_jdx_kp,cot_kpdx,likpsq,lijsq,area_ijkp);
-        //
-        nhat_local=cross_product(xijp1,xij);
+        // cot_times_rij = Vec3d_add(cot_times_rij, xij, cot_sum);
+        // sigma_i=sigma_i+voronoi_area(cot_jdx_k,cot_kdx,liksq,lijsq,area_ijk);
+        // nhat_local=cross_product(xijp1,xij);
+        /******* New one ***************/
+        cot_jdx_k = cot_aij[(j+1)%num_nbr];
+        cot_jdx_kp = cot_bij[(j-1+num_nbr)%num_nbr];
+        liksq=lijsq1[(j+1)%num_nbr];
+        likpsq=lijsq1[(j-1+num_nbr)%num_nbr];
+        area_ijkp=area_ijk1[(j-1+num_nbr)%num_nbr];
+        xijp1=xij1[(j+1)%num_nbr];
+        cot_sum=0.5*(cot_aij[j] + cot_bij[j]);
+        cot_times_rij = Vec3d_add(cot_times_rij, xij1[j], cot_sum);
+        sigma_i=sigma_i+voronoi_area(cot_jdx_k,cot_bij[j],liksq,lijsq1[j],area_ijk1[j]);
+        // sigma_i=sigma_i+voronoi_area(cot_jdx_kp,cot_aij[j],likpsq,lijsq[j],area_ijkp);
+        nhat_local=cross_product(xijp1,xij1[j]);
+        /*****************************/
         nhat=Vec3d_add(nhat,nhat_local,1e0/norm(nhat_local));
     }
     nhat = nhat/norm(nhat);
-    sigma_i = 0.5*sigma_i;  // as everything is counted twice.
     lap_bel = cot_times_rij/sigma_i;
     lap_bel_t0 = nhat*curv_t0;
     bend_ener = 0.5*BB*sigma_i*normsq(lap_bel-lap_bel_t0);
     be_ar.x = bend_ener; be_ar.y = sigma_i;
+    cout << bend_ener << endl;
     return be_ar;
 }
-
+//
 Vec2d bending_energy_ipart_neighbour(Vec3d *pos, 
         MESH_p mesh, int idx, MBRANE_p para){
 
@@ -338,8 +361,7 @@ Vec2d bending_energy_ipart_neighbour(Vec3d *pos,
    return be_artot;
 } 
 
-
- double area_total(Vec3d *pos, MESH_p mesh,
+double area_total(Vec3d *pos, MESH_p mesh,
          MBRANE_p para){
      ///  @param Pos array containing co-ordinates of all the particles
      ///  @param mesh mesh related parameters -- connections and neighbours
@@ -542,8 +564,6 @@ double lj_bottom_surf_total(Vec3d *pos,
     return lj_bote;
 }
 
-
-
 void identify_attractive_part(Vec3d *pos, 
         bool *is_attractive, double theta_attr, int N){
 
@@ -646,4 +666,3 @@ double spring_energy(Vec3d pos, int idx, MESH_p mesh, SPRING_p spring){
     }
     return ener_spr;
 }
-//
