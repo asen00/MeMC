@@ -15,7 +15,7 @@
 #include <fstream>
 #include <mpi.h>
 #include "random_gen.h"
-
+//
 using namespace std;
 #define pi 3.14159265358979
 #define R_del 0.05
@@ -157,4 +157,9 @@ typedef struct{
     double minC, maxC, theta;
     double *spcurv;
 }SPCURV_p;
+// Parameters of Landau_Ginzberg
+typedef struct{
+    bool ispot;
+    double *phi;
+}LG_p;
 #endif

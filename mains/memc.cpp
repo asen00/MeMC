@@ -63,13 +63,11 @@ double diag_energies(double *Et, Vec3d *Pos, MESH_p mesh, double *lij_t0, double
     double vol_sph, ar_sph, ini_ar;
     double Ener_t;
     Vec3d afm_force,spring_force[2];
-
     /*-----------------------------------------------*/
     /*****  initialize energy values *****/
 
-   Et[0] = 0e0;    Et[1] = 0e0;     Et[2] = 0e0; Et[3] = 0e0; 
-   Et[4] = 0e0;    Et[5] = 0e0;     Et[6] = 0e0; 
-
+    Et[0] = 0e0;    Et[1] = 0e0;     Et[2] = 0e0; Et[3] = 0e0; 
+    Et[4] = 0e0;    Et[5] = 0e0;     Et[6] = 0e0;
     Et[0] = bending_energy_total(Pos, mesh, mbrane_para);
     ar_sph = area_total(Pos, mesh, mbrane_para);
     /* *mbrane_para.area = ar_sph; */
@@ -111,10 +109,9 @@ double diag_energies(double *Et, Vec3d *Pos, MESH_p mesh, double *lij_t0, double
     {fprintf(fid, " %g  %g\n", vol_sph, ar_sph );}
     Ener_t = Et[0] + Et[1] + Et[2] + Et[3] + Et[4]+ Et[5]+ Et[6];
     fflush(fid);
-
     return Ener_t;
 }
-
+//
 int main(int argc, char *argv[]){
     pid_t pid = getpid();
     int iter, num_moves, num_bond_change;
@@ -125,7 +122,7 @@ int main(int argc, char *argv[]){
     ACTIVE_p act_para; MESH_p mesh;
     VOL_p vol_para; STICK_p stick_para;
     SPRING_p spring_para; FLUID_p fld_para;
-    AREA_p area_para;
+    AREA_p area_para; LG_p lg_para;
     Vec3d afm_force,spring_force[2];
     FILE *fid;
     double *lij_t0;
@@ -135,7 +132,6 @@ int main(int argc, char *argv[]){
     string outfolder,syscmds, para_file, log_file, outfile, filename;
     int mpi_err,mpi_rank=0;
     uint32_t seed_v;
-
     //
     mpi_err = MPI_Init(0x0, 0x0);
     mpi_err =  MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
@@ -157,10 +153,10 @@ int main(int argc, char *argv[]){
     /*************************************************/
     // read the input file
     init_read_parameters(&mbrane_para, &mc_para, &area_para, &fld_para, &vol_para,
-            &stick_para, &afm_para,  &act_para, &spring_para, filename);
+            &stick_para, &afm_para, &act_para, &spring_para, &lg_para, filename);
     mc_para.one_mc_iter = 2*mbrane_para.N;
-   // check whether the string comparison works
-   /* define all the paras */
+    // check whether the string comparison works
+    /* define all the paras */
     mbrane_para.volume =  (double*)malloc(sizeof(double));
     *mbrane_para.volume = (4./3.)*pi*pow(mbrane_para.radius,3);
     act_para.activity = (double *)calloc(mbrane_para.N, sizeof(double));
@@ -192,7 +188,6 @@ int main(int argc, char *argv[]){
     mesh.nPole = poleidx[0];
     mesh.sPole = poleidx[1];
     init_KK_0(KK_, area_para, mesh, mbrane_para.N);
-    //
     //
     if(fld_para.is_fluid)mbrane_para.av_bond_len = lij_t0[0];
     log_file=outfolder+"/mc_log";
@@ -231,11 +226,9 @@ int main(int argc, char *argv[]){
             e_t = lj_afm_total(Pos, &afm_force, mbrane_para, afm_para);
             mbrane_para.tot_energy[0] += e_t;
         }
-
         num_moves = monte_carlo_3d(Pos, mesh, lij_t0, KK_,
                 mbrane_para, mc_para, area_para, stick_para, vol_para, 
                 afm_para, act_para,  spring_para);
-
         if(fld_para.is_fluid && iter%fld_para.fluidize_every==0){
             num_bond_change = monte_carlo_fluid(Pos, mesh, mbrane_para, mc_para, fld_para);
             outfile_terminal << "fluid stats " << num_bond_change << " bonds flipped" << endl;
@@ -253,7 +246,7 @@ int main(int argc, char *argv[]){
     end_time = MPI_Wtime();
     if(mpi_rank == 0){
         fprintf(stderr, "\n---------\n");
-        fprintf(stderr, "Time for %d montecarlo steps = %g min \n", mc_para.tot_mc_iter, (end_time-start_time)/60.0);
+        fprintf(stderr, "Time for %d montecarlo steps = %g min ", mc_para.tot_mc_iter, (end_time-start_time)/60.0);
         fprintf(stderr, "\n---------\n");
     }
     fclose(fid);

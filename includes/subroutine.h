@@ -37,7 +37,9 @@ double pairlj_total_energy(Vec2d *Pos, Nbh_list *neib,
 double vol_energy_change(MBRANE_p mbrane, VOL_p , double dvol);
 double bending_energy_total(Vec3d *pos, MESH_p mesh, MBRANE_p para);
 Vec2d bending_energy_ipart(Vec3d *pos, int *node_nbr,  
-        int num_nbr, int idx, MBRANE_p para);
+        int num_nbr, int idx, MBRANE_p para, double *lijsq);
+Vec2d bending_energy_ipart(Vec3d *pos, int *node_nbr, int num_nbr,
+                            int idx, MBRANE_p para);
 Vec2d bending_energy_ipart_neighbour(Vec3d *pos, 
         MESH_p mesh, int idx, MBRANE_p para);
 
@@ -50,6 +52,8 @@ double stretch_energy_total(Vec3d *pos,
 double stretch_energy_ipart(Vec3d *pos,
          int *node_nbr, double *lij_t0, double *, int num_nbr,
                              int idx, AREA_p para);
+double stretch_energy_ipart(double *KK, double *lijsq,
+        double *lij_t0, int num_nbr);
 
 double lj_bottom_surface(double zz,
         bool is_attractive, 
@@ -63,10 +67,9 @@ double volume_ipart(Vec3d *pos, int *node_nbr,
 double lj_afm(Vec3d , AFM_p);
 double lj_afm_total(Vec3d *pos, Vec3d *afm_force,
         MBRANE_p para, AFM_p afm);
-double area_total(Vec3d *, MESH_p ,
-         MBRANE_p );
+double area_total(Vec3d *, MESH_p, MBRANE_p );
 double area_ipart(Vec3d *, int *, int , int);
-      
+Vec2d LanGinz(double *phi, Vec3d *pos, int *node_nbr, int num_nbr, int idx);
 
 //init.c
 void init_rng2(uint32_t seed_val);
@@ -84,13 +87,11 @@ void init_afm_tip(AFM_p );
 void init_read_parameters(MBRANE_p *mbrane_para, MC_p *mc_para, AREA_p *, FLUID_p *fld_para, 
         VOL_p *vol_para, STICK_p *stick_para, AFM_p *afm_para,  ACTIVE_p *act_para, 
         SPRING_p *spring_para, string para_file);
- 
 void init_activity(ACTIVE_p, int );
 int randint(int n);
 void write_parameters(MBRANE_p mbrane, MC_p mc_para, AREA_p , FLUID_p fld_para, 
         VOL_p vol_p, STICK_p stick_para, AFM_p afm_para,  ACTIVE_p act_para, 
         SPRING_p spring_para, string out_file);
- 
 //hdf5_io
 void hdf5_io_write_pos(double *Pos, int N, string input_file);
 void hdf5_io_read_pos(double *Pos, string input_file);

@@ -117,10 +117,11 @@ double rand_inc_theta(double th0, double dfac) {
   }
   return dth;
 }
-
+//
 double energy_mc_3d(Vec3d *pos, MESH_p mesh, double *lij_t0, double *KK,
-                    int idx, double *area_i, MBRANE_p mbrane, AREA_p area_p, STICK_p st_p, 
-                    VOL_p vol_p, AFM_p afm, SPRING_p spring) {
+                    int idx, double *area_i, MBRANE_p mbrane, AREA_p area_p,
+                    STICK_p st_p, VOL_p vol_p, AFM_p afm, SPRING_p spring,
+                    LG_p lg){
   /// @brief Estimate the contribution from all the energies when a particle is
   /// moved randomly
   ///  @param Pos array containing co-ordinates of all the particles
@@ -134,55 +135,62 @@ double energy_mc_3d(Vec3d *pos, MESH_p mesh, double *lij_t0, double *KK,
   /// @param AFM afm related parameter
   /// @return Change in Energy when idx particle is moved
 
-  double E_b, E_s, E_stick, E_afm, E_spr;
-  double area_idx;
-  Vec2d be_ar;
+  double E_b, E_s, E_s2, E_stick, E_afm, E_spr;
+  double area_idx, E_LG;
+  Vec2d be_ar, LG_ar;
   int cm_idx, num_nbr;
 
   E_b = 0.0;
   E_s = 0.0;
+  E_s2 = 0.0;
   E_stick = 0.0;
   E_afm = 0.0;
   E_spr = 0.0;
 
   cm_idx = mesh.nghst * idx;
   num_nbr = mesh.numnbr[idx];
-
+  //
+  double lijsq[num_nbr];
+  //
   be_ar = bending_energy_ipart(pos, (int *)(mesh.node_nbr_list + cm_idx), num_nbr,
-                             idx, mbrane);
+                             idx, mbrane, lijsq);
   E_b = be_ar.x;
   /* area_idx = be_ar.y; */
-
   be_ar = bending_energy_ipart_neighbour(pos, mesh, idx, mbrane);
-
   E_b += be_ar.x;
 
   if(area_p.is_tether){
       E_s = stretch_energy_ipart(pos, (int *)(mesh.node_nbr_list + cm_idx),
               (lij_t0 + cm_idx), (KK + cm_idx), num_nbr, idx, area_p);
+      // E_s2 = stretch_energy_ipart((KK + cm_idx), lijsq, (lij_t0 + cm_idx), num_nbr);
+      // cout << E_s2 << endl;
   }
+  //
+  if(lg.ispot){
+    LG_ar = LanGinz(phi, pos, (int *)(mesh.node_nbr_list + cm_idx), 
+            num_nbr, idx);
+  }
+  E_LG = LG_ar.x;
+  *area_i = LG_ar.y;
 
-  /* *area_i = area_idx + be_ar.y; */ 
-
-  area_idx = area_ipart(pos,  (int *) (mesh.node_nbr_list + cm_idx),
-                 num_nbr, idx);
-   *area_i = area_idx;
-
+  /* *area_i = area_idx + be_ar.y; */
+  // area_idx = area_ipart(pos,  (int *) (mesh.node_nbr_list + cm_idx),
+  //                num_nbr, idx);
+  // *area_i = area_idx;
+  
   if(st_p.do_stick)
   E_stick = lj_bottom_surface(pos[idx].z, st_p.is_attractive[idx],
       st_p.pos_bot_wall, st_p.epsilon, st_p.sigma); 
-
-    if(afm.do_afm) E_afm = lj_afm(pos[idx], afm);
-
-    if(spring.do_spring) E_spr = spring_energy(pos[idx], idx, mesh, spring);
-  return E_b + E_s + E_stick + E_afm + E_spr;
+  if(afm.do_afm) E_afm = lj_afm(pos[idx], afm);
+  if(spring.do_spring) E_spr = spring_energy(pos[idx], idx, mesh, spring);
+  
+  return E_b + E_s + E_stick + E_afm + E_spr + E_LG;
 }
 
 int monte_carlo_3d(Vec3d *pos, MESH_p mesh, double *lij_t0, double *KK,
                    MBRANE_p mbrane, MC_p mcpara, AREA_p area_p,  STICK_p st_p,
                    VOL_p vol_p, AFM_p afm,
                    ACTIVE_p activity, SPRING_p spring) {
-
   /// @brief Monte-Carlo routine for the membrane
   ///  @param Pos array containing co-ordinates of all the particles
   ///  @param mesh mesh related parameters -- connections and neighbours
@@ -250,14 +258,14 @@ int monte_carlo_3d(Vec3d *pos, MESH_p mesh, double *lij_t0, double *KK,
 
       Efin = energy_mc_3d(pos, mesh, lij_t0, KK, idx, &area_f, mbrane, area_p, st_p, vol_p,
               afm, spring);
-
       de = (Efin - Eini);
+      
       if(!area_p.is_tether){
-          d_ar = area_f - area_i;
-         de_area = (2*d_ar/(ini_ar*ini_ar))*(mbrane.area[0]  - ini_ar)
+        d_ar = area_f - area_i;
+        de_area = (2*d_ar/(ini_ar*ini_ar))*(mbrane.area[0]  - ini_ar)
                   + (d_ar/ini_ar)*(d_ar/ini_ar);
 
-            de +=  area_p.Ka*de_area;
+        de +=  area_p.Ka*de_area;
       }
       if(vol_p.do_volume){
           vol_f = volume_ipart(pos,
@@ -286,7 +294,7 @@ int monte_carlo_3d(Vec3d *pos, MESH_p mesh, double *lij_t0, double *KK,
           move = move + 1;
           *mbrane.tot_energy += de;
           if(vol_p.do_volume) *mbrane.volume += dvol; 
-          *mbrane.area += d_ar; 
+          *mbrane.area += d_ar;
       } else {
           pos[idx].x = x_o;
           pos[idx].y = y_o;
@@ -363,7 +371,7 @@ int monte_carlo_surf2d(Vec2d *Pos, Nbh_list *neib, LJ_p para, MC_p mcpara,
   }
   return move;
 }
-
+//
 int monte_carlo_fluid(Vec3d *pos, MESH_p mesh, MBRANE_p mbrane, MC_p mcpara, FLUID_p fl_para){
   /// @brief Monte-Carlo routine for the membrane
   ///  @param Pos array containing co-ordinates of all the particles
