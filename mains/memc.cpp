@@ -122,7 +122,7 @@ int main(int argc, char *argv[]){
     ACTIVE_p act_para; MESH_p mesh;
     VOL_p vol_para; STICK_p stick_para;
     SPRING_p spring_para; FLUID_p fld_para;
-    AREA_p area_para; LG_p lg_para;
+    AREA_p area_para; MIX_p mix_para;
     Vec3d afm_force,spring_force[2];
     FILE *fid;
     double *lij_t0;
@@ -153,7 +153,7 @@ int main(int argc, char *argv[]){
     /*************************************************/
     // read the input file
     init_read_parameters(&mbrane_para, &mc_para, &area_para, &fld_para, &vol_para,
-            &stick_para, &afm_para, &act_para, &spring_para, &lg_para, filename);
+            &stick_para, &afm_para, &act_para, &spring_para, &mix_para, filename);
     mc_para.one_mc_iter = 2*mbrane_para.N;
     // check whether the string comparison works
     /* define all the paras */

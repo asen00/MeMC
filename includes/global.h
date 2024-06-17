@@ -157,9 +157,9 @@ typedef struct{
     double minC, maxC, theta;
     double *spcurv;
 }SPCURV_p;
-// Parameters of Landau_Ginzberg
+// Parameters of Regular Solution Model
 typedef struct{
     bool ispot;
     double *phi;
-}LG_p;
+}MIX_p;
 #endif

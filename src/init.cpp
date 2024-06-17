@@ -191,7 +191,7 @@ void init_eval_lij_t0(Vec3d *Pos, MESH_p mesh, double *lij_t0,
 
 void init_read_parameters(MBRANE_p *mbrane_para, MC_p *mc_para, AREA_p *area_para, FLUID_p *fld_para, 
         VOL_p *vol_para, STICK_p *stick_para, AFM_p *afm_para,  ACTIVE_p *act_para, 
-        SPRING_p *spring_para, string para_file){
+        SPRING_p *spring_para, MIX_p mix_para, string para_file){
    /// @brief read parameters from para_file 
     ///  @param mesh mesh related parameters -- connections and neighbours
     /// information; 

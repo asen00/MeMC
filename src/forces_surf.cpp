@@ -635,20 +635,27 @@ Vec2d gradphi_sq(double *phi, Vec3d *pos, int *node_nbr,
         ip1 = cross_product(rik, rji);
         area1 = area1 + 0.5*norm(ip1);
         ip1 = ip1*1/norm(ip1);
-        gradphi += (phi[jdx]-phi[idx])*(cross_product(rik, ip1)/2)
-                + (phi[kdx]-phi[idx])*(cross_product(rji, ip1)/2);
+        gradphi = ((cross_product(rik, ip1)/2)*(phi[jdx]-phi[idx])
+                + (cross_product(rji, ip1)/2)*(phi[kdx]-phi[idx]))+gradphi;
     }
     gradphi = gradphi/area1;
-    grad_ar.x = np.dot(gradphi,gradphi);
-    grad_ar.y = area1;
+    grad_ar.x = inner_product(gradphi,gradphi);
+    grad_ar.y = area1; /// area of the 6 triangles surrounding the ith particle
     return grad_ar;
 }
 //
-double LanGinz(double *phi, Vec3d *pos, int *node_nbr, int num_nbr, int idx){
-    Vec2d ginz, langinz_ar;
-    double landau = phi[idx]*log(phi[idx]) + (1-phi[idx])*log[1-phi[idx]];
-    ginz = gradphi_sq(phi,pos,node_nbr,num_nbr, idx);
-    langinz_ar.x = landau+ginz.x;
-    langinz_ar.y = ginz.y;
-    return langinz;
+Vec2d reg_soln(double *phi, Vec3d *pos, int *node_nbr, int num_nbr, int idx){
+    /// TODO: Add interaction (chi*phi*(1-phi)) term
+    Vec2d grad_arr, out_array;
+    double mixenergy = phi[idx]*log(phi[idx]) + (1-phi[idx])*log(1-phi[idx]);
+    grad_arr = gradphi_sq(phi,pos,node_nbr,num_nbr, idx);
+    out_array.x = mixenergy + grad_arr.x; /// actual free energy
+    out_array.y = grad_arr.y; /// just the hexagon area; not needed currently but passing through for later
+    return out_array;
+}
+//
+void calculate_phi(Vec3d *pos, int *node_nbr, int num_nbr, int idx){
+    /// TODO: Calculate phi
+    double *phi;
+    
 }

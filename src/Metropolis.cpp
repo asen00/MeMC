@@ -121,7 +121,7 @@ double rand_inc_theta(double th0, double dfac) {
 double energy_mc_3d(Vec3d *pos, MESH_p mesh, double *lij_t0, double *KK,
                     int idx, double *area_i, MBRANE_p mbrane, AREA_p area_p,
                     STICK_p st_p, VOL_p vol_p, AFM_p afm, SPRING_p spring,
-                    LG_p lg){
+                    MIX_p mix, double *phi){
   /// @brief Estimate the contribution from all the energies when a particle is
   /// moved randomly
   ///  @param Pos array containing co-ordinates of all the particles
@@ -136,8 +136,8 @@ double energy_mc_3d(Vec3d *pos, MESH_p mesh, double *lij_t0, double *KK,
   /// @return Change in Energy when idx particle is moved
 
   double E_b, E_s, E_s2, E_stick, E_afm, E_spr;
-  double area_idx, E_LG;
-  Vec2d be_ar, LG_ar;
+  double area_idx, E_mix;
+  Vec2d be_ar, mix_ar;
   int cm_idx, num_nbr;
 
   E_b = 0.0;
@@ -166,12 +166,12 @@ double energy_mc_3d(Vec3d *pos, MESH_p mesh, double *lij_t0, double *KK,
       // cout << E_s2 << endl;
   }
   //
-  if(lg.ispot){
-    LG_ar = LanGinz(phi, pos, (int *)(mesh.node_nbr_list + cm_idx), 
+  if(mix.ispot){
+    mix_ar = reg_soln(phi, pos, (int *)(mesh.node_nbr_list + cm_idx), 
             num_nbr, idx);
   }
-  E_LG = LG_ar.x;
-  *area_i = LG_ar.y;
+  E_mix = mix_ar.x;
+  *area_i = mix_ar.y;
 
   /* *area_i = area_idx + be_ar.y; */
   // area_idx = area_ipart(pos,  (int *) (mesh.node_nbr_list + cm_idx),
@@ -184,13 +184,14 @@ double energy_mc_3d(Vec3d *pos, MESH_p mesh, double *lij_t0, double *KK,
   if(afm.do_afm) E_afm = lj_afm(pos[idx], afm);
   if(spring.do_spring) E_spr = spring_energy(pos[idx], idx, mesh, spring);
   
-  return E_b + E_s + E_stick + E_afm + E_spr + E_LG;
+  return E_b + E_s + E_stick + E_afm + E_spr + E_mix;
 }
 
 int monte_carlo_3d(Vec3d *pos, MESH_p mesh, double *lij_t0, double *KK,
                    MBRANE_p mbrane, MC_p mcpara, AREA_p area_p,  STICK_p st_p,
                    VOL_p vol_p, AFM_p afm,
-                   ACTIVE_p activity, SPRING_p spring) {
+                   ACTIVE_p activity, SPRING_p spring,
+                    MIX_p mix, double *phi) {
   /// @brief Monte-Carlo routine for the membrane
   ///  @param Pos array containing co-ordinates of all the particles
   ///  @param mesh mesh related parameters -- connections and neighbours
@@ -228,7 +229,7 @@ int monte_carlo_3d(Vec3d *pos, MESH_p mesh, double *lij_t0, double *KK,
       cm_idx = mesh.nghst * idx;
       num_nbr = mesh.numnbr[idx];
       Eini = energy_mc_3d(pos, mesh, lij_t0, KK, idx, &area_i, mbrane, area_p, st_p, vol_p,
-              afm, spring);
+              afm, spring, mix, phi);
       if(vol_p.do_volume) vol_i = volume_ipart(pos,
               (int *) (mesh.node_nbr_list + cm_idx), num_nbr, idx);
 
@@ -257,7 +258,7 @@ int monte_carlo_3d(Vec3d *pos, MESH_p mesh, double *lij_t0, double *KK,
       pos[idx].z = z_n;
 
       Efin = energy_mc_3d(pos, mesh, lij_t0, KK, idx, &area_f, mbrane, area_p, st_p, vol_p,
-              afm, spring);
+              afm, spring, mix, phi);
       de = (Efin - Eini);
       
       if(!area_p.is_tether){
