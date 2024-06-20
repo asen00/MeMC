@@ -148,9 +148,6 @@ void init_system_random_pos(Vec2d *Pos,  double len,
 
 }
 
-
-
-
 void init_eval_lij_t0(Vec3d *Pos, MESH_p mesh, double *lij_t0,
          MBRANE_p *para, SPRING_p *spring, bool is_fluid){
     /// @brief evaluates distance between neighbouring points and stores in lij_t0
@@ -178,7 +175,6 @@ void init_eval_lij_t0(Vec3d *Pos, MESH_p mesh, double *lij_t0,
             /* printf("%g %g %g %g %g \n", Pos[i].x, Pos[j].x, Pos[i].y, Pos[j].y, lij_t0[k]); */
         }
     }
-
     para->av_bond_len = sum_lij/npairs;
     r0=para->av_bond_len;
     spring->constant=para->coef_bend/(r0*r0);
@@ -189,9 +185,10 @@ void init_eval_lij_t0(Vec3d *Pos, MESH_p mesh, double *lij_t0,
     }
 }
 
-void init_read_parameters(MBRANE_p *mbrane_para, MC_p *mc_para, AREA_p *area_para, FLUID_p *fld_para, 
-        VOL_p *vol_para, STICK_p *stick_para, AFM_p *afm_para,  ACTIVE_p *act_para, 
-        SPRING_p *spring_para, string para_file){
+void init_read_parameters(MBRANE_p *mbrane_para, MC_p *mc_para, AREA_p *area_para, 
+        FLUID_p *fld_para, VOL_p *vol_para, STICK_p *stick_para, AFM_p *afm_para, 
+        ACTIVE_p *act_para, SPRING_p *spring_para, LIPID_p *lipid_para,
+        string para_file){
    /// @brief read parameters from para_file 
     ///  @param mesh mesh related parameters -- connections and neighbours
     /// information; 
@@ -230,7 +227,6 @@ void init_read_parameters(MBRANE_p *mbrane_para, MC_p *mc_para, AREA_p *area_par
             &afm_para->tip_pos_z, &afm_para->sigma, &afm_para->epsilon,
              tmp_fname);
 
-
     /* sprintf(tmp_fname, "%s", para_file.c_str() ); */
     Activity_listread(which_act, &act_para->minA, &act_para->maxA, tmp_fname);
     act_para->act = which_act;
@@ -241,16 +237,14 @@ void init_read_parameters(MBRANE_p *mbrane_para, MC_p *mc_para, AREA_p *area_par
 
     /* sprintf(tmp_fname, "%s", para_file.c_str() ); */
     Volume_listread(&vol_para->do_volume, &vol_para->is_pressurized,
-            &vol_para->coef_vol_expansion, &vol_para->pressure, tmp_fname);
+           &vol_para->coef_vol_expansion, &vol_para->pressure, tmp_fname);
 
     Area_listread(&area_para->is_tether, &area_para->YY,
             &area_para->Ka, tmp_fname);
 
-
-  // mbrane->av_bond_len = sqrt(8*pi/(2*mbrane->N-4));
-   // define the monte carlo parameters
-   mc_para->one_mc_iter = 2*mbrane_para->N;
-   mc_para->delta = sqrt(8*pi/(2*mbrane_para->N-4));
+    Lipid_listread(&lipid_para->islipid);
+    mc_para->one_mc_iter = 2*mbrane_para->N;
+    mc_para->delta = sqrt(8*pi/(2*mbrane_para->N-4));
 }
 //
 //
@@ -289,12 +283,10 @@ void write_parameters(MBRANE_p mbrane, MC_p mc_para, AREA_p area_para, FLUID_p f
             << " YY " << area_para.YY << endl
             << " sigma " << area_para.Ka << endl;
 
-
     out_<< "# =========== Activity Parameters ==========" << endl
             << " which activity = " << act_para.act << endl
             << " minA = " << act_para.minA << endl
             << " maxA = " << act_para.maxA << endl;
-
 
     out_<< "# =========== Fluid Parameters ==========" << endl
             << " is fluid= " << fld_para.is_fluid << endl
@@ -302,13 +294,11 @@ void write_parameters(MBRANE_p mbrane, MC_p mc_para, AREA_p area_para, FLUID_p f
             << " fluid iter every " << fld_para.fluidize_every << endl
             << " factor_len_vertices = " << fld_para.fac_len_vertices << endl;
 
-
     out_<< "# =========== Volume Parameters ==========" << endl
             << " do volume= " << vol_p.do_volume << endl
             << " is pressurized = " << vol_p.is_pressurized << endl
             << " coef_vol_expansion " << vol_p.coef_vol_expansion << endl
             << " pressure  " << vol_p.pressure << endl;
-
 
     out_<< "# =========== Sticking Parameters ==========" << endl
             << " do stick " << stick_para.do_stick << endl
@@ -322,7 +312,6 @@ void write_parameters(MBRANE_p mbrane, MC_p mc_para, AREA_p area_para, FLUID_p f
             << " constant " << spring_para.constant << endl
             << " nPole_eq_z " << spring_para.nPole_eq_z << endl
             << " sPole_eq_z " << spring_para.sPole_eq_z << endl;
-
     out_.close();
 }
 //
@@ -355,5 +344,10 @@ void init_activity(ACTIVE_p activity, int N){
     }
     if(activity.act == "constant"){
         for(i=0;i<N;i++) activity.activity[i] = activity.maxA;
-    }  
+    }
+}
+//
+void init_lipidcomp(bool *lipA, int N){
+    int i;
+    for(i=0;i<N;i++) lipA[i] = RandomGenerator::intUniform(0,1);
 }

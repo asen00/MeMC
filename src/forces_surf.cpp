@@ -2,16 +2,13 @@
 #include "subroutine.h"
 #define sign(x) ((x > 0) ? 1 : ((x < 0) ? -1 : 0))
 double cotangent(Vec3d si, Vec3d sk, Vec3d sj){
-    ///
     ///  @param si  coordinate of ith point
     ///  @param sk  coordinate of kth point
-    ///  @param sj  coordinate of jth point 
-
+    ///  @param sj  coordinate of jth point
     ///  @return   ({si-sk}.{sj-sk})/sqrt(({si-sk}x{sj-sk})^2)
     /// angle between vector si and sj
-    ///
     Vec3d drik, drjk, cross;
-    double cot_theta;  
+    double cot_theta;
     double inner_prod;
     //
     drik = Vec3d_add(si, sk, -1e0);
@@ -304,7 +301,6 @@ Vec2d bending_energy_ipart(Vec3d *pos, int *node_nbr, int num_nbr,
 //
 Vec2d bending_energy_ipart_neighbour(Vec3d *pos, 
         MESH_p mesh, int idx, MBRANE_p para){
-
     /// @brief Estimate the Bending energy contribution from the neighbours when ith particle position changes
     ///  @param Pos array containing co-ordinates of all the particles
     ///  @param mesh mesh related parameters -- connections and neighbours
@@ -317,7 +313,6 @@ Vec2d bending_energy_ipart_neighbour(Vec3d *pos,
     double be;
     Vec2d be_ar, be_artot;
     be = 0e0;
-
     for (j = idx*mesh.nghst; j < idx*mesh.nghst + mesh.numnbr[idx]; j++){
        nbr = mesh.node_nbr_list[j];
        num_nbr_j = mesh.numnbr[nbr];
@@ -330,7 +325,8 @@ Vec2d bending_energy_ipart_neighbour(Vec3d *pos,
    
    }
    return be_artot;
-} 
+}
+//
 double area_total(Vec3d *pos, MESH_p mesh,
          MBRANE_p para){
      ///  @param Pos array containing co-ordinates of all the particles
@@ -358,6 +354,7 @@ double area_total(Vec3d *pos, MESH_p mesh,
      }
      return area/3;
 }
+//
 double volume_total(Vec3d *pos, MESH_p mesh,
          MBRANE_p para){
     /// @brief Estimate the total volume of the shell
@@ -366,33 +363,28 @@ double volume_total(Vec3d *pos, MESH_p mesh,
     /// information;
     ///  @param para  Membrane related parameters;
     /// @return Total volume of the shell
-
-
-     int idx;
-     int num_nbr, cm_idx;
-     double vol;
-
-     vol = 0e0;
-     for(idx = 0; idx < para.N; idx++){
-         /* idx = 2; */
-         cm_idx = idx*mesh.nghst;
-         num_nbr = mesh.numnbr[idx];
-
-       vol += volume_ipart(pos,
+    int idx;
+    int num_nbr, cm_idx;
+    double vol;
+    vol = 0e0;
+    for(idx = 0; idx < para.N; idx++){
+        /* idx = 2; */
+        cm_idx = idx*mesh.nghst;
+        num_nbr = mesh.numnbr[idx];
+        vol += volume_ipart(pos,
                  (int *) (mesh.node_nbr_list + cm_idx),
                   num_nbr, idx);
-     }
-     return vol/3e0;
+    }
+    return vol/3e0;
 }
 //
-double bending_energy_total(Vec3d *pos, MESH_p mesh, 
-         MBRANE_p para){
-     /// @brief Estimate the total Bending energy
-     ///  @param Pos array containing co-ordinates of all the particles
-     ///  @param mesh mesh related parameters -- connections and neighbours
-     /// information;
-     ///  @param para  Membrane related parameters;
-     /// @return Total Bending energy
+double bending_energy_total(Vec3d *pos, MESH_p mesh, MBRANE_p para){
+    /// @brief Estimate the total Bending energy
+    ///  @param Pos array containing co-ordinates of all the particles
+    ///  @param mesh mesh related parameters -- connections and neighbours
+    /// information;
+    ///  @param para  Membrane related parameters;
+    /// @return Total Bending energy
     int idx, st_idx;
     int num_nbr, cm_idx;
     double be;
@@ -415,7 +407,7 @@ double bending_energy_total(Vec3d *pos, MESH_p mesh,
 }
 
 
- double stretch_energy_total(Vec3d *pos,
+double stretch_energy_total(Vec3d *pos,
        MESH_p mesh, double *lij_t0, double *KK_, MBRANE_p para, AREA_p area_p){
 
     /// @brief Estimate the total Stretching energy  
@@ -445,9 +437,8 @@ double bending_energy_total(Vec3d *pos, MESH_p mesh,
         /* printf( "stretch: %lf \n", se); */
     }
     return se*0.5e0;
- }
-
-
+}
+//
 double lj_rep(double sqdr, double eps){
 
     /// @param sqdr square of the distance between two points
@@ -459,20 +450,17 @@ double lj_rep(double sqdr, double eps){
     r6 = sqdr*sqdr*sqdr;
     return eps*(r6*(r6));
 }
-
+//
 double lj_attr(double sqdr, double eps){
-
     /// @param sqdr square of the distance between two points
     /// @param eps coefficient of the potential 
     /// @return Energy evaluated using Lennard-Jones potential.
     ///  @details see https://en.wikipedia.org/wiki/Lennard-Jones_potential
-
-
     double r6;
     r6 = sqdr*sqdr*sqdr;
     return 4*eps*(r6*(r6-1));
 }
-
+//
 double lj_bottom_surface(double zz, 
         bool is_attractive, 
         double sur_pos, double eps, double sigma){
@@ -635,20 +623,49 @@ Vec2d gradphi_sq(double *phi, Vec3d *pos, int *node_nbr,
         ip1 = cross_product(rik, rji);
         area1 = area1 + 0.5*norm(ip1);
         ip1 = ip1*1/norm(ip1);
-        gradphi += (phi[jdx]-phi[idx])*(cross_product(rik, ip1)/2)
-                + (phi[kdx]-phi[idx])*(cross_product(rji, ip1)/2);
+        gradphi = gradphi+(cross_product(rik, ip1)/2)*(phi[jdx]-phi[idx])
+                + (cross_product(rji, ip1)/2)*(phi[kdx]-phi[idx]);
     }
     gradphi = gradphi/area1;
-    grad_ar.x = np.dot(gradphi,gradphi);
+    grad_ar.x = normsq(gradphi);
     grad_ar.y = area1;
     return grad_ar;
 }
 //
-double LanGinz(double *phi, Vec3d *pos, int *node_nbr, int num_nbr, int idx){
-    Vec2d ginz, langinz_ar;
-    double landau = phi[idx]*log(phi[idx]) + (1-phi[idx])*log[1-phi[idx]];
-    ginz = gradphi_sq(phi,pos,node_nbr,num_nbr, idx);
-    langinz_ar.x = landau+ginz.x;
-    langinz_ar.y = ginz.y;
-    return langinz;
+double phi_ipart(bool *lipA, int *node_nbr, int num_nbr, int idx){
+    double phi = lipA[idx];
+    int jdx;
+    for (i =0; i < num_nbr; i++){
+        jdx = node_nbr[i];
+        phi+= (double) lipA[jdx];
+    }
+    return phi/(1+num_nbr);
 }
+//
+void phi_ipart_neighbour(double *phi, bool *lipA, Vec3d *pos, MESH_p mesh, int idx,
+                                    MBRANE_p para){
+    int cnt,j;
+    int num_nbr_j;
+    int nbr, cm_idx_nbr;
+    cnt = 1;
+    for (j = idx*mesh.nghst; j < idx*mesh.nghst + mesh.numnbr[idx]; j++){
+       nbr = mesh.node_nbr_list[j];
+       num_nbr_j = mesh.numnbr[nbr];
+       cm_idx_nbr = nbr*mesh.nghst;
+       phi[cnt] = phi_ipart(lipA, (int *) mesh.node_nbr_list + cm_idx_nbr, 
+                            num_nbr_j, nbr);
+       cnt+=1;
+    }
+}
+//
+Vec2d reg_sol_ener(mesh, idx, mbrane){
+}
+//
+// Vec2d LanGinz(double *phi, Vec3d *pos, int *node_nbr, int num_nbr, int idx){
+//     Vec2d ginz, langinz_ar;
+//     double landau = phi[idx]*log(phi[idx]) + (1-phi[idx])*log(1-phi[idx]);
+//     ginz = gradphi_sq(phi,pos,node_nbr,num_nbr, idx);
+//     langinz_ar.x = landau+ginz.x;
+//     langinz_ar.y = ginz.y;
+//     return langinz_ar;
+// }

@@ -40,13 +40,11 @@ typedef struct{
     double delta; // increment of position
     bool is_restart;
  }MC_p;
-
 typedef struct{
     string act;
     double minA, maxA;
     double *activity;
 }ACTIVE_p;
-
 //
 typedef struct{
     /// @brief Membrane Structure
@@ -159,7 +157,7 @@ typedef struct{
 }SPCURV_p;
 // Parameters of Landau_Ginzberg
 typedef struct{
-    bool ispot;
-    double *phi;
-}LG_p;
+    bool islipid;
+    bool *lipA;
+}LIPID_p;
 #endif

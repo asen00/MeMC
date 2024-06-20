@@ -5,8 +5,6 @@
 #include <math.h>
 using namespace std;
 /*----------------------------------------*/
-// typedef class Vec3d Vec3d;
-/*-----------------------------------------*/
 typedef struct{
   double x,y;
 }Vec2d;
@@ -71,7 +69,6 @@ inline Vec3d Vec3d::operator*(double param){
 inline void print(Vec3d a){
   cout<<a.x<<"\t"<<a.y<<"\t"<<a.z<<"\n";
 }
-/*---------------------------------------*/
 inline Vec3d Vec3d::operator/(double param){
   Vec3d temp;
   temp.x=x/param;
@@ -83,7 +80,7 @@ double inner_product(Vec3d s1, Vec3d s2);
 double norm(Vec3d s1);
 double normsq(Vec3d s1);
 Vec3d Vec3d_add(Vec3d s1, Vec3d s2, double fac);
-    /* Returns s1 + fac*s2*/
+/* Returns s1 + fac*s2*/
 Vec3d cross_product(Vec3d s1, Vec3d s2);
 Vec3d diff_pbc(Vec3d r1, Vec3d r2, double len);
 #endif /* !FILE_Position_SEEN */

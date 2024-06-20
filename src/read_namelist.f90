@@ -1,4 +1,3 @@
-
 module readnamelist
     use, intrinsic :: iso_c_binding
     implicit none
@@ -138,7 +137,6 @@ subroutine Afm_listread(do_afm, tip_rad, tip_pos_z, sigma, epsilon, &
 
 end subroutine
 
-
 subroutine Volume_listread(do_volume, is_pressurized, coef_vol_exp, pressure, &
          parafile) bind(c, name='Volume_listread')
 
@@ -154,17 +152,14 @@ subroutine Volume_listread(do_volume, is_pressurized, coef_vol_exp, pressure, &
     close(unit=100)
 end subroutine
 
-
-
-
 subroutine Fluid_listread(is_fluid,  min_allowed_nbr, fluidize_every, fac_len_vert, &
          parafile) bind(c, name='Fluid_listread')
 
-     logical(kind=c_bool) :: is_fluid
-     integer(kind=c_int) :: min_allowed_nbr, fluidize_every
-     real(kind=c_double) :: fac_len_vert
-     character(kind=c_char, len=1), dimension(char_len), intent(in) ::  parafile
-     character(len=char_len) :: f_fname
+    logical(kind=c_bool) :: is_fluid
+    integer(kind=c_int) :: min_allowed_nbr, fluidize_every
+    real(kind=c_double) :: fac_len_vert
+    character(kind=c_char, len=1), dimension(char_len), intent(in) ::  parafile
+    character(len=char_len) :: f_fname
 
     namelist /fluidpara/ is_fluid, min_allowed_nbr, fluidize_every, fac_len_vert
     call convert_cstr_fstr(parafile, f_fname)
@@ -187,6 +182,19 @@ subroutine Spring_listread(do_spring, constant, nPole_eq_z, sPole_eq_z, &
     open(unit=100,file=f_fname,status='old')
     read(unit=100,nml=springpara)
     close(unit=100)
+end subroutine
 
-     end subroutine
+subroutine Lipid_listread(islipid, &parafile) 
+        bind(c, name='Lipid_listread')
+    logical(kind=c_bool) :: islipid
+    character(kind=c_char, len=1), dimension(char_len), intent(in) ::  parafile
+    character(len=char_len) :: f_fname
+    
+    call convert_cstr_fstr(parafile, f_fname)
+    open(unit=100,file=f_fname,status='old')
+    read(unit=100,nml=lipidpara)
+    close(unit=100)
+end subroutine
+
+
 end module

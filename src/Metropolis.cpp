@@ -121,7 +121,7 @@ double rand_inc_theta(double th0, double dfac) {
 double energy_mc_3d(Vec3d *pos, MESH_p mesh, double *lij_t0, double *KK,
                     int idx, double *area_i, MBRANE_p mbrane, AREA_p area_p,
                     STICK_p st_p, VOL_p vol_p, AFM_p afm, SPRING_p spring,
-                    LG_p lg){
+                    LIPID_p lip_p){
   /// @brief Estimate the contribution from all the energies when a particle is
   /// moved randomly
   ///  @param Pos array containing co-ordinates of all the particles
@@ -134,7 +134,6 @@ double energy_mc_3d(Vec3d *pos, MESH_p mesh, double *lij_t0, double *KK,
   /// @param mcpara Monte-Carlo related parameters
   /// @param AFM afm related parameter
   /// @return Change in Energy when idx particle is moved
-
   double E_b, E_s, E_s2, E_stick, E_afm, E_spr;
   double area_idx, E_LG;
   Vec2d be_ar, LG_ar;
@@ -153,7 +152,7 @@ double energy_mc_3d(Vec3d *pos, MESH_p mesh, double *lij_t0, double *KK,
   double lijsq[num_nbr];
   //
   be_ar = bending_energy_ipart(pos, (int *)(mesh.node_nbr_list + cm_idx), num_nbr,
-                             idx, mbrane, lijsq);
+                            idx, mbrane, lijsq);
   E_b = be_ar.x;
   /* area_idx = be_ar.y; */
   be_ar = bending_energy_ipart_neighbour(pos, mesh, idx, mbrane);
@@ -166,12 +165,15 @@ double energy_mc_3d(Vec3d *pos, MESH_p mesh, double *lij_t0, double *KK,
       // cout << E_s2 << endl;
   }
   //
-  if(lg.ispot){
-    LG_ar = LanGinz(phi, pos, (int *)(mesh.node_nbr_list + cm_idx), 
-            num_nbr, idx);
+  if(lip_p.is_lipid){
+    
   }
-  E_LG = LG_ar.x;
-  *area_i = LG_ar.y;
+  // if(){
+  //   LG_ar = LanGinz(phi, pos, (int *)(mesh.node_nbr_list + cm_idx),
+  //           num_nbr, idx);
+  // }
+  // E_LG = LG_ar.x;
+  // *area_i = LG_ar.y;
 
   /* *area_i = area_idx + be_ar.y; */
   // area_idx = area_ipart(pos,  (int *) (mesh.node_nbr_list + cm_idx),
