@@ -69,7 +69,7 @@ double lj_afm_total(Vec3d *pos, Vec3d *afm_force,
         MBRANE_p para, AFM_p afm);
 double area_total(Vec3d *, MESH_p, MBRANE_p );
 double area_ipart(Vec3d *, int *, int , int);
-Vec2d LanGinz(double *phi, Vec3d *pos, int *node_nbr, int num_nbr, int idx);
+Vec2d reg_soln(double *phi, Vec3d *pos, int *node_nbr, int num_nbr, int idx);
 
 //init.c
 void init_rng2(uint32_t seed_val);
@@ -86,7 +86,7 @@ void init_read_config();
 void init_afm_tip(AFM_p );
 void init_read_parameters(MBRANE_p *mbrane_para, MC_p *mc_para, AREA_p *, FLUID_p *fld_para, 
         VOL_p *vol_para, STICK_p *stick_para, AFM_p *afm_para,  ACTIVE_p *act_para, 
-        SPRING_p *spring_para, string para_file);
+        SPRING_p *spring_para, MIX_p *mix_para, string para_file);
 void init_activity(ACTIVE_p, int );
 int randint(int n);
 void write_parameters(MBRANE_p mbrane, MC_p mc_para, AREA_p , FLUID_p fld_para, 

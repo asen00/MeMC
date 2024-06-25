@@ -39,7 +39,8 @@ typedef struct{
     double kBT;
     double delta; // increment of position
     bool is_restart;
- }MC_p;
+}MC_p;
+//
 typedef struct{
     string act;
     double minA, maxA;
@@ -155,9 +156,9 @@ typedef struct{
     double minC, maxC, theta;
     double *spcurv;
 }SPCURV_p;
-// Parameters of Landau_Ginzberg
+// Parameters of Regular Solution Model
 typedef struct{
     bool islipid;
     bool *lipA;
-}LIPID_p;
+}MIX_p;
 #endif

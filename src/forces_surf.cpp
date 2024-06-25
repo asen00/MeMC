@@ -54,8 +54,10 @@ Vec3d determine_xyz_parabola(Vec3d pos, AFM_p afm) {
     // some exception messages
     if(fabs(x0) < 1e-15){
         if(fabs(y0)< 1e-15 & fabs(z0)< 1e-15 ){
-            fprintf(stderr, "x0 = %g, y0 = %g,  z0 = %g; Points representing exosome very small...\n", x0, y0, z0);
-            fprintf(stderr, "See section Checking execution status in https://github.com/vipinagrawal25/MeMC/blob/main/README.md \n");
+            fprintf(stderr, "x0 = %g, y0 = %g,  z0 = %g; Points representing\
+                exosome exosome very small...\n", x0, y0, z0);
+            fprintf(stderr, "See section Checking execution status in \
+                https://github.com/vipinagrawal25/MeMC/blob/main/README.md \n");
         }
         x0 = x0 + 2e-12*(2*(drand48() - 1));
     }
@@ -150,14 +152,15 @@ double volume_ipart(Vec3d *pos, int *node_nbr,
 double stretch_energy_ipart(Vec3d *pos,
          int *node_nbr, double *lij_t0, double *KK,
          int num_nbr, int idx, AREA_p para){
-    /// @brief Estimate the Stretching energy contribution when ith particle position changes
+    ///  @brief Estimate the Stretching energy contribution when ith particle 
+    ///  position changes
     ///  @param Pos array containing co-ordinates of all the particles
     ///  @param idx index of ith particle;
     ///  @param node_nbr nearest neigbours of idx; 
-    /// @param lij_t0 initial distance between points of membrane
+    ///  @param lij_t0 initial distance between points of membrane
     ///  @param num_nbr number of nearest neigbours of idx; 
     ///  @param para  Membrane related parameters;
-    /// @return Stretching Energy contribution when ith particle is displaced 
+    ///  @return Stretching Energy contribution when ith particle is displaced 
     //
     double idx_ener;
     Vec3d rij;
@@ -178,7 +181,8 @@ double stretch_energy_ipart(Vec3d *pos,
 }
 //
 double stretch_energy_ipart(double *KK, double *lijsq, double *lij_t0, int num_nbr){
-    /// @brief Estimate the Stretching energy contribution when ith particle position changes
+    /// @brief Estimate the Stretching energy contribution when ith particle 
+    /// position changes
     ///  @param Pos array containing co-ordinates of all the particles
     ///  @param idx index of ith particle;
     ///  @param node_nbr nearest neigbours of idx; 
@@ -201,8 +205,8 @@ double stretch_energy_ipart(double *KK, double *lijsq, double *lij_t0, int num_n
     }
     return 0.5*idx_ener;
 }
-//Q. Given two cotangent angles, it returns either the area due to perpendicular bisector,
-// or the barycenter.
+//Q. Given two cotangent angles, it returns either the area due to perpendicular 
+/// bisector, or the barycenter.
 double voronoi_area(double cotJ, double cotK, 
         double jsq, double ksq, double area){
     /// @brief Estimate the area of the voronoi cell. If I J K are the nodes of
@@ -212,8 +216,8 @@ double voronoi_area(double cotJ, double cotK,
     ///  @param jsqr square of the length of bond i-k
     /// @param ksq square of the length of bond i-j  
     ///  @param area area of the triangle 
-    /// @return  Given two cotangent angles, it returns either the area due to perpendicular bisector,
-    /// or the barycenter.
+    /// @return  Given two cotangent angles, it returns either the area due to 
+    //  perpendicular bisector, or the barycenter.
     double sigma;
     if (cotJ>0 && cotK>0){
         if (cotJ*cotK<1){
@@ -236,14 +240,15 @@ Vec2d bending_energy_ipart(Vec3d *pos, int *node_nbr, int num_nbr,
 //
 Vec2d bending_energy_ipart(Vec3d *pos, int *node_nbr, int num_nbr,
                             int idx, MBRANE_p para, double *lijsq){
-    /// @brief Estimate the Bending energy contribution when ith particle position changes
+    ///  @brief Estimate the Bending energy contribution when ith particle position
+    ///  changes
     ///  @param Pos array containing co-ordinates of all the particles
     ///  @param idx index of ith particle;
     ///  @param node_nbr nearest neigbours of idx; 
     ///  @param num_nbr number of nearest neigbours of idx; 
     ///  @param para  Membrane related parameters;
-    /// @todo try openMP Pragmas;
-    /// @return Bending Energy contribution when ith particle is displaced 
+    ///  @todo try openMP Pragmas;
+    ///  @return Bending Energy contribution when ith particle is displaced;
     double bend_ener,sigma_i;
     Vec3d cot_times_rij;
     double BB=para.coef_bend;
@@ -277,7 +282,6 @@ Vec2d bending_energy_ipart(Vec3d *pos, int *node_nbr, int num_nbr,
         cot_aij[j] = 0.25*(ljkpsq+likpsq-lijsq[j])/area_ijkp;
         cot_bij[j] = 0.25*(ljksq[j]+liksq-lijsq[j])/area_ijk[j];
     }
-    //
     for (int j = 0; j < num_nbr; j++){
         cot_jdx_k = cot_aij[(j+1)%num_nbr];
         cot_jdx_kp = cot_bij[(j-1+num_nbr)%num_nbr];
@@ -301,7 +305,8 @@ Vec2d bending_energy_ipart(Vec3d *pos, int *node_nbr, int num_nbr,
 //
 Vec2d bending_energy_ipart_neighbour(Vec3d *pos, 
         MESH_p mesh, int idx, MBRANE_p para){
-    /// @brief Estimate the Bending energy contribution from the neighbours when ith particle position changes
+    /// @brief Estimate the Bending energy contribution from the neighbours 
+    /// when ith particle position changes
     ///  @param Pos array containing co-ordinates of all the particles
     ///  @param mesh mesh related parameters -- connections and neighbours
     /// information; 
@@ -390,23 +395,20 @@ double bending_energy_total(Vec3d *pos, MESH_p mesh, MBRANE_p para){
     double be;
     Vec2d be_ar;
 
-     be = 0e0;
-     st_idx = get_nstart(para.N, para.bdry_type);
-     for(idx = st_idx; idx < para.N; idx++){
-         /* idx = 2; */
-
-         cm_idx = idx*mesh.nghst;
-         num_nbr = mesh.numnbr[idx];
-
-         be_ar = bending_energy_ipart(pos,
+    be = 0e0;
+    st_idx = get_nstart(para.N, para.bdry_type);
+    for(idx = st_idx; idx < para.N; idx++){
+        /* idx = 2; */
+        cm_idx = idx*mesh.nghst;
+        num_nbr = mesh.numnbr[idx];
+        be_ar = bending_energy_ipart(pos,
                  (int *) (mesh.node_nbr_list + cm_idx),
                   num_nbr, idx, para);
-         be = be + be_ar.x;
-     }
+        be = be + be_ar.x;
+    }
      return be;
 }
-
-
+//
 double stretch_energy_total(Vec3d *pos,
        MESH_p mesh, double *lij_t0, double *KK_, MBRANE_p para, AREA_p area_p){
 
@@ -461,10 +463,8 @@ double lj_attr(double sqdr, double eps){
     return 4*eps*(r6*(r6-1));
 }
 //
-double lj_bottom_surface(double zz, 
-        bool is_attractive, 
+double lj_bottom_surface(double zz, bool is_attractive, 
         double sur_pos, double eps, double sigma){
-
     /// @brief Sticking of the bottom surface using LJ potential 
     /// @param zz z-coordinate of a point in shell
     /// @param eps coefficient of the potential 
@@ -473,10 +473,7 @@ double lj_bottom_surface(double zz,
     /// @param is_attractive true if the zz sees the  bottom wall 
     /// @return Energy evaluated using Lennard-Jones potential.
     ///  @details see https://en.wikipedia.org/wiki/Lennard-Jones_potential
-
-
     double inv_sqdz, ds;
-
     if(is_attractive){
         ds = sur_pos - zz;
         inv_sqdz = (sigma*sigma)/(ds*ds);
@@ -485,7 +482,7 @@ double lj_bottom_surface(double zz,
         return 0e0;
     }
 }
-
+//
 double lj_bottom_surf_total(Vec3d *pos, 
          MBRANE_p para, STICK_p st_p){
     /// @brief Estimate the total Sticking  
@@ -503,10 +500,9 @@ double lj_bottom_surf_total(Vec3d *pos,
     }
     return lj_bote;
 }
-
+//
 void identify_attractive_part(Vec3d *pos, 
         bool *is_attractive, double theta_attr, int N){
-
     /// @brief identify all the points which substends theta_attr with the centre 
     /// @param Pos array containing co-ordinates of all the particles
     /// @param is_attractive true for all the particles which sees bottom wall 
@@ -520,9 +516,8 @@ void identify_attractive_part(Vec3d *pos,
         is_attractive[i] = theta < theta_attr;
     }
 }
-
+//
 double lj_afm(Vec3d pos, AFM_p afm){
-
     /// @brief Energy contribution from AFM tip to ith point in membrane 
     ///  @param Pos co-ordinates of the ith particle 
     ///  @param afm afm related parameters
@@ -540,8 +535,8 @@ double lj_afm(Vec3d pos, AFM_p afm){
         ener_afm = lj_rep(ds_sig_inv, afm.epsilon);
     }
    return ener_afm;
-};
-
+}
+//
 double lj_afm_total(Vec3d *pos, Vec3d *afm_force,
         MBRANE_p para, AFM_p afm){
 
@@ -557,7 +552,6 @@ double lj_afm_total(Vec3d *pos, Vec3d *afm_force,
     double lj_afm_e;
     double lj_afm_t;
     Vec3d f_t, pt_pbola, dr;
-
     lj_afm_e = 0e0;
     f_t.x = 0; f_t.y = 0; f_t.z = 0;
     for(idx = 0; idx < para.N; idx++){
@@ -569,7 +563,6 @@ double lj_afm_total(Vec3d *pos, Vec3d *afm_force,
         f_t.x += 12*lj_afm_t*dr.x/ds;
         f_t.y += 12*lj_afm_t*dr.y/ds;
         f_t.z += 12*lj_afm_t*dr.z/ds;
-
         lj_afm_e  += lj_afm_t; 
 
         /* lj_afm_e  = determine_xyz_parabola(pos[idx], afm); */
@@ -577,6 +570,7 @@ double lj_afm_total(Vec3d *pos, Vec3d *afm_force,
     *afm_force  = f_t;
     return lj_afm_e;
 }
+//
 double spring_tot_energy_force(Vec3d *Pos, Vec3d *spring_force, 
                                MESH_p mesh, SPRING_p spring){
     double kk = spring.constant;
@@ -604,10 +598,9 @@ double spring_energy(Vec3d pos, int idx, MESH_p mesh, SPRING_p spring){
     return ener_spr;
 }
 //
-Vec2d gradphi_sq(double *phi, Vec3d *pos, int *node_nbr, 
-    int num_nbr, int idx){
+Vec2d gradphi_sq(double *phi, Vec3d *pos, int *node_nbr, int num_nbr, int idx){
     /// @brief Per-vertex gradient estimation in DOI: 10.2312/stag.20181301
-    int i, jdx, kdx;
+    int i, jdx, kdx, k;
     Vec3d  rk, ri, rj, rkp;
     Vec3d rji, ip1, rik;
     double area1 = 0e0;
@@ -617,14 +610,15 @@ Vec2d gradphi_sq(double *phi, Vec3d *pos, int *node_nbr,
     for (i =0; i < num_nbr; i++){
         jdx = node_nbr[i];
         kdx = node_nbr[(i+1)%num_nbr];
+        k = (i+1)%num_nbr;
         ri = pos[idx]; rj = pos[jdx]; rk = pos[kdx];
         rji  = rj - ri;
         rik  = ri - rk;
         ip1 = cross_product(rik, rji);
         area1 = area1 + 0.5*norm(ip1);
         ip1 = ip1*1/norm(ip1);
-        gradphi = gradphi+(cross_product(rik, ip1)/2)*(phi[jdx]-phi[idx])
-                + (cross_product(rji, ip1)/2)*(phi[kdx]-phi[idx]);
+        gradphi = gradphi+(cross_product(rik, ip1)/2)*(phi[i+1]-phi[0])
+                + (cross_product(rji, ip1)/2)*(phi[k]-phi[0]);
     }
     gradphi = gradphi/area1;
     grad_ar.x = normsq(gradphi);
@@ -633,39 +627,78 @@ Vec2d gradphi_sq(double *phi, Vec3d *pos, int *node_nbr,
 }
 //
 double phi_ipart(bool *lipA, int *node_nbr, int num_nbr, int idx){
-    double phi = lipA[idx];
+    double phi = (double) lipA[idx];
     int jdx;
-    for (i =0; i < num_nbr; i++){
+    for (int i =0; i < num_nbr; i++){
         jdx = node_nbr[i];
         phi+= (double) lipA[jdx];
     }
     return phi/(1+num_nbr);
 }
 //
-void phi_ipart_neighbour(double *phi, bool *lipA, Vec3d *pos, MESH_p mesh, int idx,
-                                    MBRANE_p para){
+void phi_ipart_neighbour(double *phi, bool *lipA,  MESH_p mesh, int idx){
     int cnt,j;
     int num_nbr_j;
     int nbr, cm_idx_nbr;
-    cnt = 1;
+    cnt = 0;
+    int cm_idx = mesh.nghst * idx;
+    int num_nbr = mesh.numnbr[idx];
+    phi[cnt] = phi_ipart(lipA, (int *)(mesh.node_nbr_list + cm_idx),
+                num_nbr, idx);
     for (j = idx*mesh.nghst; j < idx*mesh.nghst + mesh.numnbr[idx]; j++){
+       cnt+=1;
        nbr = mesh.node_nbr_list[j];
        num_nbr_j = mesh.numnbr[nbr];
        cm_idx_nbr = nbr*mesh.nghst;
-       phi[cnt] = phi_ipart(lipA, (int *) mesh.node_nbr_list + cm_idx_nbr, 
+       phi[cnt] = phi_ipart(lipA, (int *) mesh.node_nbr_list + cm_idx_nbr,
                             num_nbr_j, nbr);
-       cnt+=1;
     }
 }
 //
-Vec2d reg_sol_ener(mesh, idx, mbrane){
+Vec2d reg_soln_ipart(Vec3d *pos, MESH_p mesh, bool *lipA, int idx){
+    /// TODO: Add interaction (chi*phi*(1-phi))
+    int num_nbr = mesh.numnbr[idx];
+    double phi[1+num_nbr];
+    phi_ipart_neighbour(phi, lipA, mesh, idx);
+    Vec2d grad_arr, out_array;
+    double mixenergy = phi[0]*log(phi[0]) + (1-phi[0])*log(1-phi[0]);
+    // phi has a size of 1+num_nbr. You can't access phi[idx]
+    int cm_idx = idx*mesh.nghst;
+    grad_arr = gradphi_sq(phi, pos, (int *)(mesh.node_nbr_list + cm_idx),
+        num_nbr, idx);
+    out_array.x = mixenergy + grad_arr.x; /// actual free energy
+    out_array.y = grad_arr.y;
+    return out_array;
 }
 //
-// Vec2d LanGinz(double *phi, Vec3d *pos, int *node_nbr, int num_nbr, int idx){
-//     Vec2d ginz, langinz_ar;
-//     double landau = phi[idx]*log(phi[idx]) + (1-phi[idx])*log(1-phi[idx]);
-//     ginz = gradphi_sq(phi,pos,node_nbr,num_nbr, idx);
-//     langinz_ar.x = landau+ginz.x;
-//     langinz_ar.y = ginz.y;
-//     return langinz_ar;
-// }
+double reg_soln_ipart_neighbour(Vec3d *pos, MESH_p mesh,
+        int idx, MBRANE_p para, MIX_p mix_p){
+
+    int j, nbr;
+    double regsol_fe = 0e0;
+    Vec2d regsol_ar;
+    for (j = idx*mesh.nghst; j < idx*mesh.nghst + mesh.numnbr[idx]; j++){
+        nbr = mesh.node_nbr_list[j];
+        regsol_ar = reg_soln_ipart(pos, mesh, mix_p.lipA, nbr);
+        regsol_fe +=  regsol_ar.x;
+   }
+   return regsol_fe;
+}
+//
+double reg_soln_tot(Vec3d *pos, MESH_p mesh, MBRANE_p para, MIX_p mix_p){
+
+    int idx, st_idx;
+    int num_nbr, cm_idx;
+    double rsfe_tot;
+    Vec2d rs_ar;
+    rsfe_tot = 0e0;
+    st_idx = get_nstart(para.N, para.bdry_type);
+    for(idx = st_idx; idx < para.N; idx++){
+        cm_idx = idx*mesh.nghst;
+        num_nbr = mesh.numnbr[idx];
+        rs_ar=reg_soln_ipart(pos, mesh, mix_p.lipA, idx);
+        rsfe_tot = rsfe_tot + rs_ar.x;
+    }
+    return rsfe_tot;
+
+}

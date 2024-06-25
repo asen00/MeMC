@@ -1,36 +1,21 @@
 #include "global.h"
 #include "subroutine.h"
 /* std::mt19937 rng2; */
-
 extern "C"  void Membrane_listread(int *, double *,  double *, 
             double *, int *, char *);
-
 extern "C"  void Area_listread(bool *, double *, double *, char *);
-
 extern "C"  void Stick_listread(bool *, double *, double *, double *, 
             double *,  char *);
-
 extern "C"  void  MC_listread(char *, double *, double *, bool *,
             int *, int *, char *);
-
 extern "C"  void  Activity_listread(char *, double *, double *, char *);
-
 extern "C"  void  Afm_listread(bool *, double *, double *, double *, double *,
              char *);
-
 extern "C"  void  Spring_listread(bool *, double *, double *, double *, char *);
-
 extern "C"  void  Fluid_listread(bool *, int * , int *, double *, char *);
-extern "C"  void   Volume_listread(bool *, bool *, double *, double*, char *); 
-
-/* void init_rng2(uint32_t seed_val) { */
-
-  ///  @brief Generates random number
-  /* rng2.seed(seed_val); */
-/* } */
-
-
-
+extern "C"  void  Volume_listread(bool *, bool *, double *, double*, char *); 
+extern "C"  void Lipid_listread(bool *, char *);
+//
 void init_system_random_pos(Vec2d *Pos,  double len, 
         int N, char *metric, int bdry_condt ){
 
@@ -53,7 +38,6 @@ void init_system_random_pos(Vec2d *Pos,  double len,
 
     /* std::uniform_real_distribution<> rand_real(dl, len-dl); */
 
-    
     is_sph = false;
     is_cart = false;
     if(strcmp(metric, "sph") == 0){
@@ -184,18 +168,16 @@ void init_eval_lij_t0(Vec3d *Pos, MESH_p mesh, double *lij_t0,
         }
     }
 }
-
+//
 void init_read_parameters(MBRANE_p *mbrane_para, MC_p *mc_para, AREA_p *area_para, 
-        FLUID_p *fld_para, VOL_p *vol_para, STICK_p *stick_para, AFM_p *afm_para, 
-        ACTIVE_p *act_para, SPRING_p *spring_para, LIPID_p *lipid_para,
-        string para_file){
-   /// @brief read parameters from para_file 
+        FLUID_p *fld_para, VOL_p *vol_para, STICK_p *stick_para, AFM_p *afm_para,  
+        ACTIVE_p *act_para, SPRING_p *spring_para, MIX_p *mix_para, string para_file){
+    /// @brief read parameters from para_file 
     ///  @param mesh mesh related parameters -- connections and neighbours
     /// information; 
     ///  @param mbrane membrane related parameters
     ///  @param afm AFM related parameters
     ///  @param mcpara monte-carlo related parameters
-    //
     //
     char temp_algo[char_len];
     char which_act[char_len], tmp_fname[char_len];
@@ -242,16 +224,15 @@ void init_read_parameters(MBRANE_p *mbrane_para, MC_p *mc_para, AREA_p *area_par
     Area_listread(&area_para->is_tether, &area_para->YY,
             &area_para->Ka, tmp_fname);
 
-    Lipid_listread(&lipid_para->islipid);
+    Lipid_listread(&mix_para->islipid, tmp_fname);
     mc_para->one_mc_iter = 2*mbrane_para->N;
     mc_para->delta = sqrt(8*pi/(2*mbrane_para->N-4));
 }
 //
-//
 void write_parameters(MBRANE_p mbrane, MC_p mc_para, AREA_p area_para, FLUID_p fld_para, 
         VOL_p vol_p, STICK_p stick_para, AFM_p afm_para,  ACTIVE_p act_para, 
         SPRING_p spring_para, string out_file){
- 
+
     double FvK = area_para.YY*mbrane.radius*mbrane.radius/mbrane.coef_bend;
     ofstream out_;
     out_.open( out_file );
@@ -334,7 +315,6 @@ void init_KK_0(double *KK, AREA_p area_p, MESH_p mesh, int N){
             /* printf("%d  %lf \n", mpi_rank, KK[k]); */
         }
     }
-    /* exit(0); */
 }
 //
 void init_activity(ACTIVE_p activity, int N){

@@ -1,10 +1,10 @@
 #include "../includes/global.h"
 #include "../includes/subroutine.h"
 //
-int * start_simulation(Vec3d *Pos, MESH_p mesh, double *lij_t0, 
+int* start_simulation(Vec3d *Pos, MESH_p mesh, double *lij_t0, 
                     MBRANE_p mbrane_para, MC_p mc_para, STICK_p stick_para,
                     VOL_p vol_para, AFM_p afm_para, ACTIVE_p act_para,
-                    SPRING_p spring_para, FLUID_p fld_para, LIPID_p lipid_para,
+                    SPRING_p spring_para, FLUID_p fld_para, MIX_p mix_para,
                     string outfolder){
     double Pole_zcoord;
     int* poleidx = new int[2];
@@ -18,9 +18,9 @@ int * start_simulation(Vec3d *Pos, MESH_p mesh, double *lij_t0,
             identify_attractive_part(Pos, stick_para.is_attractive, stick_para.theta,
             mbrane_para.N);
         //-----------------//
-        if(lipid_para.islipid){
-            lipid_para.lipA = (bool *)calloc(mbrane_para.N, sizeof(bool));
-            init_lipidcomp(lipid_para.lipA, mbrane_para.N);
+        if(mix_para.islipid){
+            mix_para.lipA = (bool *)calloc(mbrane_para.N, sizeof(bool));
+            init_lipidcomp(mix_para.lipA, mbrane_para.N);
         }
         //-----------------//
         max(&mesh.nPole,&Pole_zcoord,Pos,mbrane_para.N);
@@ -42,7 +42,7 @@ int * start_simulation(Vec3d *Pos, MESH_p mesh, double *lij_t0,
         hdf5_io_read_pos( (double *)Pos,  outfolder+"/restart.h5");
         hdf5_io_read_mesh((int *) mesh.numnbr,
                 (int *) mesh.node_nbr_list, outfolder+"/restart.h5");
-        hdf5_io_read_lipid((bool *)(lipid_para->lipA), outfolder+"/restart.h5");
+        hdf5_io_read_lipid((bool *)(mix_para.lipA), outfolder+"/restart.h5");
     }
     return poleidx;
 }
@@ -67,12 +67,13 @@ void diag_wHeader(MBRANE_p mbrane_para, AREA_p area_para, STICK_p stick_para,
 double diag_energies(double *Et, Vec3d *Pos, MESH_p mesh, double *lij_t0, double *KK,
         MBRANE_p mbrane_para, AREA_p area_para, STICK_p stick_para,
         VOL_p vol_para, AFM_p afm_para, ACTIVE_p act_para,
-        SPRING_p spring_para, LIPID_p lipid_para, FILE *fid){
+        SPRING_p spring_para, MIX_p mix_para, FILE *fid){
+
     double vol_sph, ar_sph, ini_ar;
     double Ener_t;
     Vec3d afm_force,spring_force[2];
     /*-----------------------------------------------*/
-    /*****  initialize energy values *****/
+    /***** initialize energy values *****/
     Et[0] = 0e0;    Et[1] = 0e0;     Et[2] = 0e0; Et[3] = 0e0; 
     Et[4] = 0e0;    Et[5] = 0e0;     Et[6] = 0e0;
     Et[0] = bending_energy_total(Pos, mesh, mbrane_para);
@@ -110,7 +111,7 @@ double diag_energies(double *Et, Vec3d *Pos, MESH_p mesh, double *lij_t0, double
             fprintf(fid, " %g", Et[6]);
         }
     }
-    if (lipid_para.islipid){Et[7] = ;}
+    if (mix_para.islipid){Et[7] = reg_soln_tot(Pos, mesh, mbrane_para, mix_para);}
     if (afm_para.do_afm){fprintf(fid, " %g %g %g", afm_force.x, afm_force.y, afm_force.z);}
     if (spring_para.do_spring){fprintf(fid, " %g %g", spring_force[0].z, spring_force[1].z);}
     if (spring_para.do_spring){fprintf(fid, " %g %g", Pos[mesh.nPole].z, Pos[mesh.sPole].z);}
@@ -118,6 +119,7 @@ double diag_energies(double *Et, Vec3d *Pos, MESH_p mesh, double *lij_t0, double
     Ener_t = Et[0] + Et[1] + Et[2] + Et[3] + Et[4]+ Et[5]+ Et[6]+ Et[7];
     fflush(fid);
     return Ener_t;
+
 }
 //
 int main(int argc, char *argv[]){
@@ -130,7 +132,7 @@ int main(int argc, char *argv[]){
     ACTIVE_p act_para; MESH_p mesh;
     VOL_p vol_para; STICK_p stick_para;
     SPRING_p spring_para; FLUID_p fld_para;
-    AREA_p area_para; LIPID_p lipid_para;
+    AREA_p area_para; MIX_p mix_para;
     Vec3d afm_force,spring_force[2];
     FILE *fid;
     double *lij_t0;
@@ -156,7 +158,7 @@ int main(int argc, char *argv[]){
     /*************************************************/
     // read the input file
     init_read_parameters(&mbrane_para, &mc_para, &area_para, &fld_para, &vol_para,
-            &stick_para, &afm_para, &act_para, &spring_para, &lipid_para, filename);
+            &stick_para, &afm_para, &act_para, &spring_para, &mix_para, filename);
     mc_para.one_mc_iter = 2*mbrane_para.N;
     // check whether the string comparison works
     /* define all the paras */
@@ -189,7 +191,7 @@ int main(int argc, char *argv[]){
     poleidx = start_simulation(Pos, mesh, lij_t0,
                      mbrane_para,  mc_para,  stick_para,
                      vol_para,  afm_para,  act_para, 
-                     spring_para,  fld_para,  lipid_para,
+                     spring_para,  fld_para,  mix_para,
                      outfolder);
     mesh.nPole = poleidx[0];
     mesh.sPole = poleidx[1];
@@ -205,7 +207,7 @@ int main(int argc, char *argv[]){
     //
     fprintf(fid , "%d %g", 0, 0.0 );
     Ener_t = diag_energies(Et, Pos,  mesh, lij_t0, KK_, mbrane_para, area_para, stick_para,
-            vol_para,  afm_para,  act_para, spring_para, lipid_paralipid_para, fid );
+            vol_para,  afm_para,  act_para, spring_para, mix_para, fid );
     *mbrane_para.tot_energy = Ener_t;
     filename = outfolder + "/para.out";
     write_parameters(mbrane_para, mc_para, area_para, fld_para, vol_para,
@@ -233,7 +235,7 @@ int main(int argc, char *argv[]){
         }
         num_moves = monte_carlo_3d(Pos, mesh, lij_t0, KK_,
                 mbrane_para, mc_para, area_para, stick_para, vol_para, 
-                afm_para, act_para,  spring_para);
+                afm_para, act_para, spring_para, mix_para);
         if(fld_para.is_fluid && iter%fld_para.fluidize_every==0){
             num_bond_change = monte_carlo_fluid(Pos, mesh, mbrane_para, mc_para, fld_para);
             outfile_terminal << "fluid stats " << num_bond_change << " bonds flipped" << endl;
@@ -241,7 +243,7 @@ int main(int argc, char *argv[]){
 
         fprintf(fid , "%d %g", iter, ((float)num_moves/(float)mc_para.one_mc_iter) );
         Ener_t = diag_energies(Et, Pos,  mesh, lij_t0, KK_,  mbrane_para, area_para, stick_para,
-                vol_para,  afm_para,  act_para, spring_para, lipid_para, fid );
+                vol_para,  afm_para,  act_para, spring_para, mix_para, fid );
 
         outfile_terminal << "iter = " << iter << "; Accepted Moves = " 
             << (double) num_moves*100/mc_para.one_mc_iter << " %;"<<  
