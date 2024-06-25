@@ -184,17 +184,17 @@ subroutine Spring_listread(do_spring, constant, nPole_eq_z, sPole_eq_z, &
     close(unit=100)
 end subroutine
 
-subroutine Lipid_listread(islipid, &parafile) 
-        bind(c, name='Lipid_listread')
+subroutine Lipid_listread(islipid, &
+        parafile) bind(c, name='Lipid_listread')
     logical(kind=c_bool) :: islipid
     character(kind=c_char, len=1), dimension(char_len), intent(in) ::  parafile
     character(len=char_len) :: f_fname
-    
+
+    namelist /lipidpara/ islipid
     call convert_cstr_fstr(parafile, f_fname)
-    open(unit=100,file=f_fname,status='old')
-    read(unit=100,nml=lipidpara)
+    open(unit=100, file=f_fname, status='old')
+    read(unit=100, nml=lipidpara)
     close(unit=100)
 end subroutine
-
 
 end module

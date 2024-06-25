@@ -13,7 +13,7 @@ using namespace std;
 int monte_carlo_3d(Vec3d *pos, MESH_p mesh, 
                 double *lij_t0, double *KK, MBRANE_p mbrane,
                 MC_p mcpara, AREA_p,  STICK_p ,  VOL_p , AFM_p afm, 
-                ACTIVE_p activity,  SPRING_p spring);
+                ACTIVE_p activity,  SPRING_p spring, MIX_p mix);
  /* double energy_mc_3d(Vec3d *pos, MESH_p mesh, */ 
          /* double *lij_t0, int idx, MBRANE_p , STICK_p , */
          /* VOL_p , AFM_p , SPRING_p ); */
@@ -69,16 +69,18 @@ double lj_afm_total(Vec3d *pos, Vec3d *afm_force,
         MBRANE_p para, AFM_p afm);
 double area_total(Vec3d *, MESH_p, MBRANE_p );
 double area_ipart(Vec3d *, int *, int , int);
-Vec2d reg_soln(double *phi, Vec3d *pos, int *node_nbr, int num_nbr, int idx);
-
+Vec2d reg_soln_ipart(Vec3d *pos, MESH_p mesh, bool *lipA, int idx);
+double reg_soln_ipart_neighbour(Vec3d *pos, MESH_p mesh,
+        int idx, MBRANE_p para, MIX_p mix_p);
+double reg_soln_tot(Vec3d *pos, MESH_p mesh, MBRANE_p para, MIX_p mix_p);
 //init.c
 void init_rng2(uint32_t seed_val);
 void init_system_random_pos(Vec2d *Pos,  double len, int N, char *metric, int);
 double spring_energy(Vec3d pos, int idx, MESH_p mesh, SPRING_p spring);
 double spring_tot_energy_force(Vec3d *Pos, Vec3d *spring_force, 
                                MESH_p mesh, SPRING_p spring);
-
 void init_KK_0(double *, AREA_p , MESH_p , int );
+void init_lipidcomp(bool *lipA, int N);
 //initialise.c
  void init_eval_lij_t0(Vec3d *Pos, MESH_p mesh,
          double *lij_t0, MBRANE_p *para, SPRING_p *spring, bool );
@@ -98,6 +100,7 @@ void hdf5_io_read_pos(double *Pos, string input_file);
 void hdf5_io_read_mesh(int *cmlist, int *node_nbr, string input_file);
 void hdf5_io_write_mesh(int *cmlist,
         int *node_nbr, int N, int ng, string output_file);
+void hdf5_io_read_lipid(bool *lipA, string input_file);
 void io_dump_config(double *Pos, int N, char *);
 void io_read_config(double *Pos, int N, char *);
 void io_dump_config_ascii(double *Pos, int N, char *);
