@@ -2,10 +2,11 @@
 #include <sys/stat.h>
 #include "math.h"
 #include <string>
-#include "Vector.h"
-#include "global.h"
+#include "vector.hpp"
 #include <iomanip>
 #include <sstream>
+#include <fstream>
+#include <string>
 using namespace std;
 /*-----------------------------------------------*/
 double SqEr(double Arr1[], double Arr2[],int nn){
@@ -30,16 +31,6 @@ T absolute(T value){
     return value*(-1);
   }
 }
-/*----------------------------------------------*/
-void __attribute__((weak)) check_param(){
-  cout << "I believe all your model parameters are physical. Otherwise, define function: "
-          "void check_param() in model.cpp file" << endl;
-}
-// -----------------------------------------------
-void __attribute__((weak)) write_param(string fname){
-  cout << "I can not find any implementation to write model parameters." 
-          "Hence I will not write anything." << endl;
-}
 /*-----------------------------------------------*/
 void print(double *arr, int start, int skip, int end){
   for (int in = 0; in < int(end/skip); ++in){
@@ -57,9 +48,18 @@ void print(float *arr, int start, int skip, int end){
 /*-----------------------------------------------*/
 void print(double *arr, int nn){
   for (int in = 0; in < nn; ++in){
-      cout << arr[in] << "\t";
+      cout << arr[in] << "\n";
   }
   cout << endl;
+}
+/*-----------------------------------------------*/
+void print(double *arr, int nn, string fname){
+  ofstream outfile;
+  outfile.open(fname);
+  for (int in = 0; in < nn; ++in){
+      outfile << arr[in] << "\n";
+  }
+  outfile.close();
 }
 /*-----------------------------------------------*/
 void print(int *arr, int nn){
@@ -149,7 +149,7 @@ inline double pos_coord(Vec3d pos, char dirn='z'){
   return 0e0;
 }
 /*-----------------------------------------------*/
-void max(int *amaxind, double *amaxval, Vec3d *pos, int ndim, char dirn){
+void max(int *amaxind, double *amaxval, Vec3d *pos, int ndim,char dirn){
   // function returns the value and index of the maximum entry.
   int maxind=0;
   double maxval=-1e+16;
@@ -179,17 +179,18 @@ void min(int *aminind, double *aminval, Vec3d *pos, int ndim,char dirn){
   *aminval=minval;
 }
 /*-----------------------------------------------*/
-double height_rms(Vec3d *Pos, MBRANE_p mbrane){
-  double radius=mbrane.radius;
-  double N=mbrane.N;
-  double hrms=0;
-  double hh;
-  for (int i = 0; i < N; ++i){
-    hh = sqrt(Pos[i].x*Pos[i].x+Pos[i].y*Pos[i].y+Pos[i].z*Pos[i].z) - radius;
-    hrms += hh*hh;
-  }
-  return sqrt(hrms/N);
-}
+/*-----------------------------------------------*/
+// double height_rms(Vec3d *Pos, MBRANE_p mbrane){
+//   double radius=mbrane.radius;
+//   double N=mbrane.N;
+//   double hrms=0;
+//   double hh;
+//   for (int i = 0; i < N; ++i){
+//     hh = sqrt(Pos[i].x*Pos[i].x+Pos[i].y*Pos[i].y+Pos[i].z*Pos[i].z) - radius;
+//     hrms += hh*hh;
+//   }
+//   return sqrt(hrms/N);
+// }
 /*-----------------------------------------------*/
 int get_nstart(int N, int bdrytype){
     static int nf1;
@@ -200,7 +201,7 @@ int get_nstart(int N, int bdrytype){
             nf2 = 2 * nf1;
             break;
         case 1:
-            nf2 = 4 * nf1; 
+            nf2 = 4 * nf1;
             break;
         default:
             nf2 = 0;
@@ -226,7 +227,7 @@ int print_sanity(int *nbr_del1, int *nbr_del2, int *nbr_add1, int *nbr_add2,
   fclose(fid);
   return 0;
 }
-/*-----------------------------------------------*/
+
 int print_sanity(Vec3d *pos, int *nbr_del1, int *nbr_del2, int *nbr_add1,
                  int *nbr_add2, int del1, int del2, int add1, int add2,
                  char *ftag, int idx) {
@@ -269,7 +270,7 @@ int print_sanity(Vec3d *pos, int *nbr_del1, int *nbr_del2, int *nbr_add1,
   fclose(fid);
   return 0;
 }
-/*-----------------------------------------------*/
+
 double determinant(Vec3d X1, Vec3d X2, Vec3d X3, double len) {
   Vec3d A = diff_pbc(X1, X2, len);
   Vec3d B = diff_pbc(X1, X3, len);
@@ -277,4 +278,21 @@ double determinant(Vec3d X1, Vec3d X2, Vec3d X3, double len) {
   double det = (A.x * B.y - A.y * B.x);
   return det;
 }
+
+
+
+/* void wDiag(FILE *fid, MBRANE_para mbrane, AFM_para afm, SPRING_para spring, MESH mesh, */
+/*             int i, int num_moves, double *Et,Vec3d *afm_force, */
+/*             Vec3d *spring_force, double vol_sph, Vec3d *Pos){ */
+/*     fprintf(fid, " %d %d %g %g %g %g", i, num_moves, mbrane.tot_energy[0], Et[0], Et[1], Et[2]); */
+/*     if(afm.icompute!=0){fprintf(fid, " %g", Et[3]);} */
+/*     if (spring.icompute!=0){fprintf(fid, " %g", Et[5]);} */
+/*     if(fabs(mbrane.coef_vol_expansion)>1e-16){fprintf(fid, " %g", Et[4]);} */
+/*     if (fabs(mbrane.pressure)>1e-16){fprintf(fid, " %g", Et[6]);} */
+/*     if (afm.icompute!=0){fprintf(fid, " %g %g %g", afm_force->x,afm_force->y,afm_force->z );} */
+/*     if (spring.icompute!=0){fprintf(fid, " %g %g", spring_force[0].z,spring_force[1].z);} */
+/*     fprintf(fid, " %g %g %g %g\n",vol_sph,Pos[mesh.nPole].z,Pos[mesh.sPole].z, */
+/*       height_rms(Pos,mbrane)); */
+/*     fflush(fid); */
+/* } */
 /*-----------------------------------------------*/
