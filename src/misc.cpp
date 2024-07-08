@@ -279,8 +279,6 @@ double determinant(Vec3d X1, Vec3d X2, Vec3d X3, double len) {
   return det;
 }
 
-
-
 /* void wDiag(FILE *fid, MBRANE_para mbrane, AFM_para afm, SPRING_para spring, MESH mesh, */
 /*             int i, int num_moves, double *Et,Vec3d *afm_force, */
 /*             Vec3d *spring_force, double vol_sph, Vec3d *Pos){ */

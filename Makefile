@@ -16,7 +16,8 @@ sources += src/stretching.cpp  src/hdf5_io.cpp  src/misc.cpp
 # sources += src/misc.cpp
 #
 object = obj/vector.o obj/metropolis.o obj/random_gen.o obj/bending.o
-object += obj/stretching.o  obj/hdf5_io.o obj/misc.o
+object += obj/stretching.o obj/hdf5_io.o obj/misc.o
+object += obj/multicomp.o
 bindir = ./bin
 #
 #
@@ -49,11 +50,16 @@ distclean:
 	@rm -rf $(dir $(wildcard */mc_log))
 	@echo "Deleted all the output data"
 
+## tests and utils ##
 curv: $(object) obj/curv.o
 	echo $(CC) $(object) $(link)
 	@$(CC) $(object) obj/readnml.o obj/curv.o $(link) -lgfortran -o exe_curv
 	@if [ ! -d $(bindir) ] ; then echo "directory bin does not exist creating it" ; mkdir $(bindir) ; fi
 	mv exe_curv $(bindir)
-
 obj/curv.o: utils/getcurv.cpp $(includes)
+	@$(CC) -Jobj -c $< -o $@ $(link)
+##
+gradient : $(object) obj/gradient.o
+	$(CC) $(object) obj/gradient.o obj/readnml.o  $(link) -lgfortran -o exe_grad
+obj/gradient.o: tests/gradient.cpp $(includes)
 	@$(CC) -Jobj -c $< -o $@ $(link)

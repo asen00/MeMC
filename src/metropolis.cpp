@@ -1,5 +1,7 @@
 #include "metropolis.hpp"
 #include "random_gen.hpp"
+#include "multicomp.hpp"
+
 #include <cmath>
 #include <cstring>
 const double pi = 3.14159265358979323846264;

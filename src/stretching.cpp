@@ -31,10 +31,6 @@ int STE::initSTE(int N, std::string fname){
 
 }
 
-bool STE::dovol(){return do_volume;}
-bool STE::dopressure(){return is_pressurized;}
-double STE::getpressure(){return pressure;}
-
 double STE::stretch_energy_ipart(Vec3d *pos,
                                  int *node_nbr, int num_nbr, int idx, int ghost){
     double HH;
@@ -57,7 +53,6 @@ double STE::stretch_energy_ipart(Vec3d *pos,
     //
     return 0.5*idx_ener*HH;
 }
-double STE::PV_change(double dvol){return pressure*dvol;}
 
 double STE::stretch_energy_total(Vec3d *pos, MESH_p mesh){
 
@@ -226,7 +221,6 @@ double STE::volume_total(Vec3d *pos, MESH_p mesh){
      }
      return vol/3e0;
 }
-
 
 
 // /*-------------------------------------------------------------------------------------*/

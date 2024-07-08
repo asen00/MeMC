@@ -9,8 +9,8 @@
 #include <cstdlib>
 #include <fstream>
 #include <iomanip>
-#include <mpi.h>
 
+#include <mpi.h>
 #include "metropolis.hpp"
 #include "bending.hpp"
 #include "stretching.hpp"
@@ -48,11 +48,6 @@ double start_simulation(Vec3d *Pos, MESH_p mesh, McP mcobj, STE &stretchobj, str
                 (int *) mesh.node_nbr_list, outfolder+"/input.h5");
         ave_bond_len = stretchobj.init_eval_lij_t0(Pos, mesh, mcobj.isfluid());
         residx = 0; 
-        // init_spcurv(spcurv_para, Pos, mbrane_para.N);
-        // if(stick_para.do_stick)
-            // identify_attractive_part(Pos, stick_para.is_attractive, stick_para.theta, mbrane_para.N);
-        // max(&mesh.nPole,&Pole_zcoord,Pos,mbrane_para.N);
-        // min(&mesh.sPole,&Pole_zcoord,Pos,mbrane_para.N);
     }else{
         hdf5_io_read_double( (double *)Pos,  outfolder+"/input.h5", "pos");
         scale_pos(Pos, radius, mesh.N);
@@ -103,7 +98,6 @@ int main(int argc, char *argv[]){
     mpi_err =  MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
  
     pid_t pid = getpid();
-    // cout << "# ID for this process is: " << pid << endl;
     std::string fname;
     uint32_t seed_v;
     int iter, start, num_moves, num_bond_change;
@@ -113,7 +107,7 @@ int main(int argc, char *argv[]){
     McP mcobj(bendobj, stretchobj);
     Vec3d *Pos; 
     MESH_p mesh;
-    string outfolder, syscmds, para_file, outfile, filename;
+    string outfolder, para_file, outfile, filename;
     char tmp_fname[128];
 
     start = atoi(argv[1]);
@@ -121,8 +115,8 @@ int main(int argc, char *argv[]){
     fstream fileptr(outfolder+"/mc_log", ios::app);
     // Check if the file opened successfully
     //
+    seed_v = (uint32_t) (mpi_rank + time(0));
     RandomGenerator::init(seed_v);
-    cout << "# The seed value is " << seed_v << endl;
     //
     para_file = outfolder+"/para_file.in";
     sprintf(tmp_fname, "%s", para_file.c_str() );
@@ -143,6 +137,7 @@ int main(int argc, char *argv[]){
     mcobj.setEneVol();
 
     fstream outfile_terminal(outfolder+"/terminal.out", ios::app);
+    outfile_terminal << "# The seed value is " << seed_v << endl;
     if(!mcobj.isrestart()) diag_wHeader(bendobj,  stretchobj, fileptr);
     if(mcobj.isrestart()) fileptr << "# Restart index " << residx << endl;
     for(iter=residx; iter < mcobj.totaliter(); iter++){

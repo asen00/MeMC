@@ -1,4 +1,5 @@
 #include "bending.hpp"
+#include "multicomp.hpp"
 #include <fstream>
 #define sign(x) ((x > 0) ? 1 : ((x < 0) ? -1 : 0))
 
@@ -24,64 +25,6 @@ int BE::initBE(int N, std::string fname){
       << " spcurv " << spcurv << endl;
   out_.close();
    return 0;
-}
-/*------------------------*/
-double cotangent(Vec3d si, Vec3d sk, Vec3d sj){
-    ///
-    ///  @param si  coordinate of ith point
-    ///  @param sk  coordinate of kth point
-    ///  @param sj  coordinate of jth point 
-     
-    ///  @return   ({si-sk}.{sj-sk})/sqrt(({si-sk}x{sj-sk})^2)
-    /// angle between vector si and sj
-    ///
-    Vec3d drik, drjk, cross;
-    double cot_theta;  
-    double inner_prod;
-    //
-    drik = si - sk; 
-    drjk = sj - sk; 
-    cross = cross_product(drik, drjk);
-    inner_prod = inner_product(drik, drjk);
-    cot_theta = inner_prod/sqrt(inner_product(cross,cross));
-    //
-    return cot_theta;
-}
-/*------------------------*/
-double cotangent(double a, double b, double c){
-
-     /// @brief  a, b, c are the length of the sides of a triangle 
-     
-     ///  @return   0.25*(a*a+b*b-c*c)/area; where area is the area of triangle
-    double s = 0.5*(a+b+c);
-    double area = sqrt(s*(s-a)*(s-b)*(s-c));
-    double cot_theta=0.25*(a*a+b*b-c*c)/area;
-    return cot_theta;
-}
-/*------------------------*/
-double voronoi_area(double cotJ, double cotK, 
-        double jsq, double ksq, double area){
-    /// @brief Estimate the area of the voronoi cell. If I J K are the nodes of
-    /// triangle
-    ///  @param cotJ angle at node j (see paper/paper.pdf)
-    ///  @param cotK angle at node k (see paper/paper.pdf)
-    ///  @param jsqr square of the length of bond i-k
-    /// @param ksq square of the length of bond i-j  
-    ///  @param area area of the triangle 
-    /// @return  Given two cotangent angles, it returns either the area due to perpendicular bisector,
-    /// or the barycenter.
-   double sigma;
-    if (cotJ>0 && cotK>0){
-        if (cotJ*cotK<1){
-            // all angles are acute;
-            sigma = 0.125*(cotJ*jsq+cotK*ksq);
-        }else{
-            sigma = 0.5*area;
-        }
-    }else{
-       sigma = 0.25*area;
-   }
-    return sigma;
 }
 /*-------------------------------------------------*/
 double BE::bending_energy_ipart(Vec3d *pos, int *node_nbr, int num_nbr, int idx){
@@ -143,7 +86,6 @@ double BE::bending_energy_ipart(Vec3d *pos, int *node_nbr, int num_nbr, int idx)
     lap_bel = cot_times_rij/sigma_i;
     lap_bel_t0 = nhat*curv_t0;
     bend_ener = 0.5*BB*sigma_i*normsq(lap_bel-lap_bel_t0);
-    cout << bend_ener << endl;
     return bend_ener;
 }
 /*------------------------*/
