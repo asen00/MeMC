@@ -1,7 +1,7 @@
 #include "multicomp.hpp"
 #include "vector.hpp"
 //
-Vec2d gradphi_sq(double *phi, Vec3d *pos, int *node_nbr, int num_nbr, int idx){
+Vec2d MulCom::gradphi_sq(double *phi, Vec3d *pos, int *node_nbr, int num_nbr, int idx){
     /// @brief Per-vertex gradient estimation in DOI: 10.2312/stag.20181301
     int j, jdx, kdx, k;
     Vec3d  rk, ri, rj, rkp;
