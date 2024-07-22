@@ -19,7 +19,7 @@
 #include <fstream>
 #include <iostream>
 
-extern "C" void MeshRead(int *, int *, int *, double *, char *);
+extern "C" void MeshRead(int *, int *, double *, char *);
 
 template<typename T>
 string ZeroPadNumber(T num){
@@ -42,7 +42,7 @@ double start_simulation(Vec3d *Pos, MESH_p mesh, McP mcobj, STE &stretchobj, str
     string resfile;
 
     if(!mcobj.isrestart()){
-        hdf5_io_read_double( (double *)Pos,  outfolder+"/input.h5", "pos");
+        hdf5_io_read_double( (double *)Pos, outfolder+"/input.h5", "pos");
         scale_pos(Pos, radius, mesh.N);
         hdf5_io_read_mesh((int *) mesh.numnbr,
                 (int *) mesh.node_nbr_list, outfolder+"/input.h5");
@@ -96,16 +96,16 @@ int main(int argc, char *argv[]){
     int mpi_err, mpi_rank, residx;
     mpi_err = MPI_Init(0x0, 0x0);
     mpi_err =  MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
- 
+
     pid_t pid = getpid();
     std::string fname;
     uint32_t seed_v;
     int iter, start, num_moves, num_bond_change;
     double av_bond_len, Etot, radius;
-    BE  bendobj;
+    BE bendobj;
     STE stretchobj;
     McP mcobj(bendobj, stretchobj);
-    Vec3d *Pos; 
+    Vec3d *Pos;
     MESH_p mesh;
     string outfolder, para_file, outfile, filename;
     char tmp_fname[128];
@@ -119,10 +119,11 @@ int main(int argc, char *argv[]){
     RandomGenerator::init(seed_v);
     //
     para_file = outfolder+"/para_file.in";
-    sprintf(tmp_fname, "%s", para_file.c_str() );
-    MeshRead(&mesh.N, &mesh.bdry_type, &mesh.nghst, &radius, tmp_fname);
+    sprintf(tmp_fname, "%s", para_file.c_str());
+    MeshRead(&mesh.bdry_type, &mesh.nghst, &radius, tmp_fname);
     // cout << mesh.N << "\t" << mesh.bdry_type << "\t" << mesh.nghst << "\t" << radius;
 
+    mesh.N = hdf5_io_get_Np(outfolder+"/input.h5", "pos");
     Pos = (Vec3d *)calloc(mesh.N, sizeof(Vec3d));
     mesh.numnbr = (int *)calloc(mesh.N, sizeof(int));
     mesh.node_nbr_list = (int *)calloc(mesh.nghst*mesh.N, sizeof(int));

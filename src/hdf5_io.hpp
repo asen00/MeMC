@@ -12,5 +12,5 @@ void hdf5_io_write_mesh(int *cmlist,
 void io_dump_config(double *Pos, int N, char *);
 void io_read_config(double *Pos, int N, char *);
 void io_dump_config_ascii(double *Pos, int N, char *);
-
+int hdf5_io_get_Np(string input_file, string dset_name);
 #endif

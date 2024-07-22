@@ -6,7 +6,29 @@
  *  
  */
 
- 
+int hdf5_io_get_Np(string input_file, string dset_name){
+   hid_t file_id,dataset_id;  /* identifiers */
+   herr_t status;
+   // string dset_name="pos";
+
+   if(access(input_file.c_str(),F_OK)!=0){
+      fprintf(stderr, "The configuration file does not exit\n");
+      exit(1);
+   }
+
+   file_id = H5Fopen(input_file.c_str(), H5F_ACC_RDONLY, 
+      H5P_DEFAULT);
+   dataset_id = H5Dopen(file_id, dset_name.c_str(),
+      H5P_DEFAULT);
+
+   hid_t dspace = H5Dget_space(dataset_id);
+   const int ndims = H5Sget_simple_extent_ndims(dspace);
+   hsize_t dims[ndims];
+   H5Sget_simple_extent_dims(dspace, dims, NULL);
+
+   return dims[0];
+}
+
 void hdf5_io_write_double(double *Pos, int N, 
         string input_file, string dset_name){
 
@@ -112,8 +134,6 @@ void hdf5_io_write_mesh(int *cmlist,
         fprintf(stderr, "file close failed\n");
     }
 }
-
-
 
 
 void hdf5_io_read_mesh(int *cmlist,
