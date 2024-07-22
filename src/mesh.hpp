@@ -9,5 +9,5 @@ typedef struct{
     int *numnbr;
     int *node_nbr_list;
 }MESH_p;
-extern "C" void MeshRead(int *, int *, int *, double *, char *);
+extern "C" void MeshRead(int *, int *, double *, char *);
 #endif
