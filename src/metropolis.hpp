@@ -10,7 +10,7 @@ class McP {
 public : 
   McP (BE &beobj, STE &steobj): beobj(beobj), steobj(steobj) {};
   int monte_carlo_3d(Vec3d *pos, MESH_p mesh);
-  double energy_mc_3d(Vec3d *pos, MESH_p mesh,  int );
+  pair<double,double> energy_mc_3d(Vec3d *pos, MESH_p mesh, int);
   int monte_carlo_fluid(Vec3d *, MESH_p, double);
   bool Boltzman(double DE, double activity);
   bool Glauber(double DE, double activity);
@@ -21,27 +21,28 @@ public :
   int dumpskip();
   int totaliter();
   int onemciter();
-  double evalEnergy(Vec3d *, MESH_p, fstream &, int);
+  double evalEnergy(Vec3d *, MESH_p);
+  void write_energy(fstream &, int);
   double getarea();
   double getvolume();
   void setEneVol();
 private:
-    BE &beobj;
-    STE &steobj;
-    std::string algo;
-    double dfac;
-    int one_mc_iter, tot_mc_iter, dump_skip;
-    double kBT;
-    double delta; // increment of position
-    bool is_restart;
-    bool is_fluid;
-    int min_allowed_nbr;
-    int fluidize_every;
-    double fac_len_vertices;
-    double totEner, totvol; 
-    double EneMonitored, VolMonitored;
-    double volt0;
-    int acceptedmoves;
+  BE &beobj;
+  STE &steobj;
+  std::string algo;
+  double dfac;
+  int one_mc_iter, tot_mc_iter, dump_skip;
+  double kBT;
+  double delta; // increment of position
+  bool is_restart;
+  bool is_fluid;
+  int min_allowed_nbr;
+  int fluidize_every;
+  double fac_len_vertices;
+  double totEner, totvol, bende, stretche, pre;
+  double EneMonitored, VolMonitored;
+  double volt0;
+  int acceptedmoves;
 };
 
 #endif

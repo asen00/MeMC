@@ -141,7 +141,6 @@ void zeros(double *yzero, int ndim){
   }
 }
 /*-----------------------------------------------*/
-
 inline double pos_coord(Vec3d pos, char dirn='z'){
   if (dirn=='x'){return pos.x;}
   else if(dirn=='y'){return pos.y;}
@@ -271,13 +270,13 @@ int print_sanity(Vec3d *pos, int *nbr_del1, int *nbr_del2, int *nbr_add1,
   return 0;
 }
 
-double determinant(Vec3d X1, Vec3d X2, Vec3d X3, double len) {
-  Vec3d A = diff_pbc(X1, X2, len);
-  Vec3d B = diff_pbc(X1, X3, len);
+// double determinant(Vec3d X1, Vec3d X2, Vec3d X3, double len) {
+//   Vec3d A = diff_pbc(X1, X2, len);
+//   Vec3d B = diff_pbc(X1, X3, len);
 
-  double det = (A.x * B.y - A.y * B.x);
-  return det;
-}
+//   double det = (A.x * B.y - A.y * B.x);
+//   return det;
+// }
 
 /* void wDiag(FILE *fid, MBRANE_para mbrane, AFM_para afm, SPRING_para spring, MESH mesh, */
 /*             int i, int num_moves, double *Et,Vec3d *afm_force, */
@@ -293,4 +292,4 @@ double determinant(Vec3d X1, Vec3d X2, Vec3d X3, double len) {
 /*       height_rms(Pos,mbrane)); */
 /*     fflush(fid); */
 /* } */
-/*-----------------------------------------------*/
+/*-------------------------------------------------*/

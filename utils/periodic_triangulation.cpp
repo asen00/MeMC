@@ -150,7 +150,6 @@ void cyclic_nbrs(int* new_nbr, const vector<int>& cmlist,
                         Point* pts, int Np, int nghst, double lenth){
 
    // vector<int> new_nbr(nghst * Np, -1);
-
    double dx, dy;
    for (int ip = 0; ip < Np; ++ip){
       vector<int> nbrs(node_nbr.begin()+cmlist[ip], node_nbr.begin()+cmlist[ip + 1]);
@@ -302,7 +301,7 @@ int main(int argc, char const *argv[]){
       Vertex_handle vh = t.nearest_vertex(points[i]);
       vertex_indices[vh] = i;
    }
-
+   
    for (Face_iterator fit = t.finite_faces_begin(); fit != t.finite_faces_end(); ++fit){
       vector<int>tri;
       for (int i = 0; i < 3; ++i) { // Assuming 2D Delaunay triangulation (triangles)

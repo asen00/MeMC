@@ -103,6 +103,26 @@ inline void printnorm(Vec3d* a, int N){
   }
 }
 /*---------------------------------------*/
+inline double inner_product(Vec3d s1, Vec3d s2){
+    return s1.x*s2.x + s1.y*s2.y + s1.z*s2.z;
+}
+/*---------------------------------------*/
+inline double norm(Vec3d s1){
+    return sqrt(inner_product(s1,s1));
+}
+/*---------------------------------------*/
+inline double normsq(Vec3d s1){
+    return inner_product(s1,s1);
+}
+/*---------------------------------------*/
+inline Vec3d cross_product(Vec3d s1, Vec3d s2){
+  Vec3d crosprod;
+  crosprod.x = s1.y*s2.z - s1.z*s2.y;
+  crosprod.y = s1.z*s2.x - s1.x*s2.z;
+  crosprod.z = s1.x*s2.y - s1.y*s2.x;
+  return crosprod;
+}
+/*---------------------------------------*/
 double inner_product(Vec3d s1, Vec3d s2);
 double norm(Vec3d s1);
 double normsq(Vec3d s1);

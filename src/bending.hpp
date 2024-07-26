@@ -8,7 +8,7 @@ class BE{
 public : 
   double bending_energy_ipart_neighbour(Vec3d *pos, MESH_p mesh, int idx);
   double bending_energy_ipart(Vec3d *pos, int *node_nbr, int num_nbr,
-                              int idx);
+                              int idx, int, double, int);
   double bending_energy_total(Vec3d *pos, MESH_p mesh);
   int initBE(int, std::string);
 private:
@@ -72,7 +72,20 @@ double voronoi_area(double cotJ, double cotK,
  }
   return sigma;
 }
+/*-------------------------------------------------*/
+Vec3d diff(Vec3d a, Vec3d b, double lenth){
+   Vec3d ab=a-b;
+   if (ab.x >= 0.5 * lenth) ab.x -= lenth;
+   if (ab.x < -0.5 * lenth) ab.x += lenth;
 
-    
+   if (ab.y >= 0.5 * lenth) ab.y -= lenth;
+   if (ab.y < -0.5 * lenth) ab.y += lenth;
+
+   if (ab.z >= 0.5 * lenth) ab.z -= lenth;
+   if (ab.z < -0.5 * lenth) ab.z += lenth;
+
+   return ab;
+}
+/*-------------------------------------------------*/
 };
 #endif

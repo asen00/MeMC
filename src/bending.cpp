@@ -1,6 +1,7 @@
 #include "bending.hpp"
 #include "multicomp.hpp"
 #include <fstream>
+
 #define sign(x) ((x > 0) ? 1 : ((x < 0) ? -1 : 0))
 
 extern "C" void BendRead(double *, double *, double *, double *, double *, char *);
@@ -27,7 +28,8 @@ int BE::initBE(int N, std::string fname){
    return 0;
 }
 /*-------------------------------------------------*/
-double BE::bending_energy_ipart(Vec3d *pos, int *node_nbr, int num_nbr, int idx){
+double BE::bending_energy_ipart(Vec3d *pos, int *node_nbr, int num_nbr, int idx,
+            int bdry_type, double lenth, int edge){
     /// @brief Estimate the Bending energy contribution when ith particle 
     /// position changes
     ///  @param Pos array containing co-ordinates of all the particles
@@ -37,29 +39,39 @@ double BE::bending_energy_ipart(Vec3d *pos, int *node_nbr, int num_nbr, int idx)
     ///  @param para  Membrane related parameters;
     /// @todo try openMP Pragmas;
     /// @return Bending Energy contribution when ith particle is displaced.
-    double bend_ener,sigma_i;
+    double bend_ener;
     Vec3d cot_times_rij;
-    double BB=coef_bend;
-    double curv_t0 = spcurv;
     Vec3d lap_bel,lap_bel_t0,nhat;
     double cot_aij[num_nbr],cot_bij[num_nbr],area_ijk[num_nbr];
-    double ljksq[num_nbr];
-    Vec3d xij[num_nbr],xjk[num_nbr];
+    double ljksq[num_nbr], lijsq[num_nbr];
+    Vec3d xij[num_nbr],xjk;
     double cot_jdx_k,cot_jdx_kp,cot_kdx,cot_kpdx,area_ijkp;
     Vec3d xik,xikp,xjkp,nhat_local,xijp1;
     int jdx,kdx,kpdx,jdxp1;
-    double cot_sum,liksq,likpsq,ljkpsq,lijsq[num_nbr];
-    sigma_i = 0e0;
+    double cot_sum,liksq,likpsq,ljkpsq;
+    double sigma_i = 0e0;
     // store all the lengths
-    for (int j = 0; j < num_nbr; ++j){
-        jdx = node_nbr[j];
-        kdx = node_nbr[(j+1)%num_nbr]; // this is same as kdx
-        xij[j] = pos[idx]- pos[jdx];
-        xjk[j] = pos[jdx]- pos[kdx];
-        lijsq[j] = inner_product(xij[j],xij[j]);
-        ljksq[j] = inner_product(xjk[j],xjk[j]);
-        area_ijk[j] = 0.5*norm(cross_product(xij[j],xjk[j]));
-    }
+    if (bdry_type==1 || idx<=edge){
+        for (int j = 0; j < num_nbr; ++j){
+            jdx = node_nbr[j];
+            kdx = node_nbr[(j+1)%num_nbr]; // this is same as kdx
+            xij[j]=pos[idx]-pos[jdx];
+            xjk = pos[jdx]-pos[kdx];
+            lijsq[j] = inner_product(xij[j],xij[j]);
+            ljksq[j] = inner_product(xjk,xjk);
+            area_ijk[j] = 0.5*norm(cross_product(xij[j],xjk));
+        }
+    }else{
+        for (int j = 0; j < num_nbr; ++j){
+            jdx = node_nbr[j];
+            kdx = node_nbr[(j+1)%num_nbr]; // this is same as kdx
+            xij[j] = diff_pbc(pos[idx],pos[jdx], lenth);
+            xjk =  diff_pbc(pos[jdx],pos[kdx], lenth);
+            lijsq[j] = inner_product(xij[j],xij[j]);
+            ljksq[j] = inner_product(xjk,xjk);
+            area_ijk[j] = 0.5*norm(cross_product(xij[j],xjk));
+        }
+    }    
     // Now compute all the angles
     for (int j = 0; j < num_nbr; ++j){
         liksq=lijsq[(j+1)%num_nbr];
@@ -84,8 +96,8 @@ double BE::bending_energy_ipart(Vec3d *pos, int *node_nbr, int num_nbr, int idx)
     }
     nhat = nhat/norm(nhat);
     lap_bel = cot_times_rij/sigma_i;
-    lap_bel_t0 = nhat*curv_t0;
-    bend_ener = 0.5*BB*sigma_i*normsq(lap_bel-lap_bel_t0);
+    lap_bel_t0 = nhat*spcurv;
+    bend_ener = 0.5*coef_bend*sigma_i*normsq(lap_bel-lap_bel_t0);
     return bend_ener;
 }
 /*------------------------*/
@@ -105,9 +117,9 @@ double BE::bending_energy_ipart_neighbour(Vec3d *pos, MESH_p mesh, int idx){
         nbr = mesh.node_nbr_list[j];
         num_nbr_j = mesh.numnbr[nbr];
         cm_idx_nbr = nbr*mesh.nghst;
-        be += bending_energy_ipart(pos, 
-              (int *) mesh.node_nbr_list + cm_idx_nbr,
-               num_nbr_j, nbr);
+        be += bending_energy_ipart(pos,
+            (int *) mesh.node_nbr_list + cm_idx_nbr,
+            num_nbr_j, nbr, mesh.bdry_type, mesh.boxlen, mesh.edge);
     }
     return be;
 }
@@ -129,9 +141,9 @@ double BE::bending_energy_total(Vec3d *pos, MESH_p mesh){
         /* idx = 2; */
         cm_idx = idx*mesh.nghst;
         num_nbr = mesh.numnbr[idx];
-        be += bending_energy_ipart(pos,
-                (int *) (mesh.node_nbr_list + cm_idx), num_nbr, idx);
-     }
+        be += bending_energy_ipart(pos, (int *) (mesh.node_nbr_list + cm_idx), 
+                num_nbr, idx, mesh.bdry_type, mesh.boxlen, mesh.edge);
+    }
      return be;
 }
 /*-------------------------------------------------------------------------------------*/
