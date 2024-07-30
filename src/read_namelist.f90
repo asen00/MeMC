@@ -91,6 +91,8 @@ subroutine MeshRead(bdry_cdt, nghst, radius, parafile) bind(c, name="MeshRead")
     close(unit=200)
 end subroutine
 
+
+
 subroutine StretchRead(YY, do_volume, is_pressurized, coef_vol_expansion, &
                pressure, coef_area_expansion, do_area, parafile) bind(c, name="StretchRead")
   logical (kind=c_bool) :: do_volume, is_pressurized, do_area
@@ -192,20 +194,6 @@ subroutine Volume_listread(do_volume, is_pressurized, coef_vol_exp, pressure, &
     call convert_cstr_fstr(parafile, f_fname)
     open(unit=100,file=f_fname,status='old')
     read(unit=100,nml=Volpara)
-    close(unit=100)
-end subroutine
-
-subroutine Area_listread(do_area, coef_area_exp, &
-         parafile) bind(c, name='Area_listread')
-     real(c_double) :: coef_area_exp
-     logical(kind=c_bool) :: do_area
-     character(kind=c_char, len=1), dimension(char_len), intent(in) ::  parafile
-     character(len=char_len) :: f_fname
-
-     namelist /Areapara/ do_area, coef_area_exp
-    call convert_cstr_fstr(parafile, f_fname)
-    open(unit=100,file=f_fname,status='old')
-    read(unit=100,nml=Areapara)
     close(unit=100)
 end subroutine
 
