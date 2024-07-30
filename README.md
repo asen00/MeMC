@@ -360,4 +360,3 @@ In case the bug is in the `h5py`, the user is requested to use the [hdf5-tools](
 # Developers Options
 
 For informations on API click [here](https://vipinagrawal25.github.io/MeMC/)
-

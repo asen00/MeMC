@@ -66,17 +66,60 @@ subroutine Stick_listread(do_stick, pos_bot_wall, sigma, epsilon, &
     close(unit=100)
 end subroutine
 
+subroutine BendRead(coef_bend, minC, maxC, theta, spcurv, parafile) bind(c, name="BendRead")
+  real (kind=c_double) :: coef_bend, minC, maxC, theta, spcurv
+  character(kind=c_char, len=1), dimension(char_len), intent(in) ::  parafile
+  character(len=char_len) :: f_fname
+
+  namelist /Bendpara/ coef_bend, minC, maxC, theta, spcurv 
+    call convert_cstr_fstr(parafile, f_fname)
+    open(unit=200,file=f_fname,status='old')
+    read(unit=200,nml=Bendpara)
+    close(unit=200)
+end subroutine
+
+subroutine MeshRead(bdry_cdt, nghst, radius, parafile) bind(c, name="MeshRead")
+  integer (kind=c_int) :: bdry_cdt, nghst
+  real(kind = c_double) :: radius
+  character(kind=c_char, len=1), dimension(char_len), intent(in) :: parafile
+  character(len=char_len) :: f_fname
+
+  namelist /Meshpara/ bdry_cdt, radius, nghst
+    call convert_cstr_fstr(parafile, f_fname)
+    open(unit=200,file=f_fname,status='old')
+    read(unit=200,nml=Meshpara)
+    close(unit=200)
+end subroutine
+
+subroutine StretchRead(YY, do_volume, is_pressurized, coef_vol_expansion, &
+               pressure, coef_area_expansion, do_area, parafile) bind(c, name="StretchRead")
+  logical (kind=c_bool) :: do_volume, is_pressurized, do_area
+  real (kind=c_double) :: YY, pressure, coef_area_expansion, coef_vol_expansion
+  character(kind=c_char, len=1), dimension(char_len), intent(in) ::  parafile
+  character(len=char_len) :: f_fname
+
+  namelist /Stretchpara/ YY, do_volume, is_pressurized, coef_vol_expansion, &
+                         pressure, coef_area_expansion, do_area 
+    call convert_cstr_fstr(parafile, f_fname)
+    open(unit=200,file=f_fname,status='old')
+    read(unit=200,nml=Stretchpara)
+    close(unit=200)
+end subroutine
+
 subroutine MC_listread(algo, dfac, kbt, is_restart,&
- tot_mc_iter, dump_skip, parafile) bind(c, name='MC_listread')
- integer(kind=c_int) :: tot_mc_iter, dump_skip
- logical (kind=c_bool) :: is_restart
-    real(kind=c_double) :: dfac, kbt
+ tot_mc_iter, dump_skip, is_fluid, min_allowed_nbr, &
+                fluidize_every, fac_len_vertices, parafile) bind(c, name='MC_listread')
+ integer(kind=c_int) :: tot_mc_iter, dump_skip, min_allowed_nbr, fluidize_every
+ logical (kind=c_bool) :: is_restart, is_fluid
+    real(kind=c_double) :: dfac, kbt, fac_len_vertices
     character(kind=c_char, len=1), dimension(char_len) :: algo;
     character(kind=c_char, len=1), dimension(char_len), intent(in) :: parafile
     character(len=char_len) :: f_fname
     character(len=char_len) :: Mcalgo
 
-    namelist /mcpara/ Mcalgo, dfac, kbt, is_restart, tot_mc_iter, dump_skip
+    namelist /mcpara/ Mcalgo, dfac, kbt, is_restart, tot_mc_iter, dump_skip, &
+         is_fluid, min_allowed_nbr, fluidize_every, &
+         fac_len_vertices
 
     call convert_cstr_fstr(parafile, f_fname)
     open(unit=100,file=f_fname,status='old')
@@ -152,20 +195,17 @@ subroutine Volume_listread(do_volume, is_pressurized, coef_vol_exp, pressure, &
     close(unit=100)
 end subroutine
 
-
-subroutine Fluid_listread(is_fluid,  min_allowed_nbr, fluidize_every, fac_len_vert, &
-    parafile) bind(c, name='Fluid_listread')
-
-     logical(kind=c_bool) :: is_fluid
-     integer(kind=c_int) :: min_allowed_nbr, fluidize_every
-     real(kind=c_double) :: fac_len_vert
+subroutine Area_listread(do_area, coef_area_exp, &
+         parafile) bind(c, name='Area_listread')
+     real(c_double) :: coef_area_exp
+     logical(kind=c_bool) :: do_area
      character(kind=c_char, len=1), dimension(char_len), intent(in) ::  parafile
      character(len=char_len) :: f_fname
 
-    namelist /fluidpara/ is_fluid, min_allowed_nbr, fluidize_every, fac_len_vert
+     namelist /Areapara/ do_area, coef_area_exp
     call convert_cstr_fstr(parafile, f_fname)
     open(unit=100,file=f_fname,status='old')
-    read(unit=100,nml=fluidpara)
+    read(unit=100,nml=Areapara)
     close(unit=100)
 end subroutine
 
@@ -199,4 +239,18 @@ subroutine Spring_listread(do_spring, icompute, nPole_eq_z, sPole_eq_z, &
     read(unit=100,nml=springpara)
     close(unit=100)
     end subroutine
+
+subroutine LipidRead(ncomp, &
+        parafile) bind(c, name='Lipid_listread')
+    integer(kind=c_int) :: ncomp
+    character(kind=c_char, len=1), dimension(char_len), intent(in) ::  parafile
+    character(len=char_len) :: f_fname
+
+    namelist /lipidpara/ ncomp
+    call convert_cstr_fstr(parafile, f_fname)
+    open(unit=100, file=f_fname, status='old')
+    read(unit=100, nml=lipidpara)
+    close(unit=100)
+end subroutine
+
 end module
