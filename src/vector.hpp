@@ -123,10 +123,4 @@ inline Vec3d cross_product(Vec3d s1, Vec3d s2){
   return crosprod;
 }
 /*---------------------------------------*/
-double inner_product(Vec3d s1, Vec3d s2);
-double norm(Vec3d s1);
-double normsq(Vec3d s1);
-Vec3d Vec3d_add(Vec3d s1, Vec3d s2, double fac);
-Vec3d cross_product(Vec3d s1, Vec3d s2);
-Vec3d diff_pbc(Vec3d r1, Vec3d r2, double len);
 #endif /* !FILE_Position_SEEN */

@@ -1,6 +1,29 @@
 #include "multicomp.hpp"
 #include "vector.hpp"
 //
+extern "C" void LipidRead(int*, char *);
+
+int MulCom::initMulCom(int N, std::string fname){
+  char tmp_fname[128];
+  string parafile, outfile;
+
+  parafile = fname+"/para_file.in";
+  sprintf(tmp_fname, "%s", parafile.c_str() );
+
+  LipidRead(&ncomp, tmp_fname);
+
+  if (ncomp>1){
+    
+  }
+
+  // if (ncomp>1){
+  //   ofstream out_;
+  //   out_.open( fname+"/lippara.out");
+  //   out_.close(); 
+  // }
+  return 0;
+}
+
 Vec2d MulCom::gradphi_sq(double *phi, Vec3d *pos, int *node_nbr, int num_nbr, 
     int idx, int bdry_type, double lenth, int edge){
     /// @brief Per-vertex gradient estimation in DOI: 10.2312/stag.20181301
@@ -11,7 +34,7 @@ Vec2d MulCom::gradphi_sq(double *phi, Vec3d *pos, int *node_nbr, int num_nbr,
     ri = pos[idx];
     Vec3d gradphi;
     Vec2d grad_ar;
-    if (bdry_type==1||idx < edge){
+    if (bdry_type==1 || idx < edge){
         for (j = 0; j < num_nbr; j++){
             jdx = node_nbr[j];
             k = (j+1)%num_nbr;
@@ -78,14 +101,18 @@ Vec2d MulCom::reg_soln_ipart(Vec3d *pos, MESH_p mesh, int idx){
     /// TODO: Add interaction (chi*phi*(1-phi))
     int num_nbr = mesh.numnbr[idx];
     double phi[1+num_nbr];
+    double av_bond_len=mesh.av_bond_len;
     phi_ipart_neighbour(phi, mesh, idx);
+    double phi2 = 1-phi[0]; // Composition of the second component
     Vec2d grad_arr, out_array;
-    double mixenergy = phi[0]*log(phi[0]) + (1-phi[0])*log(1-phi[0]);
+    double mixenergy = phi[0]*log(phi[0]) + phi2*log(phi2);
+                        + kai*phi[0]*(1-phi[0]);
     // phi has a size of 1+num_nbr. You can't access phi[idx]
     int cm_idx = idx*mesh.nghst;
     grad_arr = gradphi_sq(phi, pos, (int *)(mesh.node_nbr_list + cm_idx),
         num_nbr, idx, mesh.bdry_type, mesh.boxlen, mesh.edge);
-    out_array.x = mixenergy + grad_arr.x; /// actual free energy
+    // actual free energy
+    out_array.x = mixenergy + (1/2)*av_bond_len*av_bond_len*grad_arr.x;
     out_array.y = grad_arr.y;
     return out_array;
 }

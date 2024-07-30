@@ -38,7 +38,6 @@ void hdf5_io_write_double(double *Pos, int N,
 	 ///  @param input_file File name to dump all the co-ordinate
 	 /// 
 
-
     hid_t   file_id, dset1, space_id;  /* identifiers */
     herr_t  status;
     hsize_t          dims; 
@@ -59,15 +58,12 @@ void hdf5_io_write_double(double *Pos, int N,
       fprintf(stderr, "file close failed\n");
   }
 }
-
 void hdf5_io_read_double(double *Pos, string input_file, 
         string dset_name){
-
     ///  @brief Read from the hdf5 file
     ///  @param Pos array containing co-ordinates of all the particles
     ///  @param input_file File name from which co-ordinate will be read
     /// 
-
 
     hid_t   file_id,dataset_id;  /* identifiers */
     herr_t  status;
@@ -83,7 +79,6 @@ void hdf5_io_read_double(double *Pos, string input_file,
           H5S_ALL, H5S_ALL, H5P_DEFAULT,Pos);
   status = H5Dclose(dataset_id);
   status = H5Fclose(file_id);
-
   if(status != 0){
       fprintf(stderr, "file close failed\n");
   }
@@ -134,7 +129,6 @@ void hdf5_io_write_mesh(int *cmlist,
         fprintf(stderr, "file close failed\n");
     }
 }
-
 
 void hdf5_io_read_mesh(int *cmlist,
         int *node_nbr,  string input_file){
