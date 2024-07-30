@@ -145,7 +145,7 @@ int main(int argc, char *argv[]){
     mcobj.initMC(mesh.N, outfolder);
     bendobj.initBE(mesh.N, outfolder);
     stretchobj.initSTE(mesh.N, outfolder);
-    av_bond_len = start_simulation(Pos, mesh, mcobj, stretchobj, outfolder, radius,
+    mesh.av_bond_len = start_simulation(Pos, mesh, mcobj, stretchobj, outfolder, radius,
                 residx);
 
     // How often do you want to compute the total energy?
@@ -179,7 +179,7 @@ int main(int argc, char *argv[]){
             << " totalener = " << Etot << "; volume = " << mcobj.getvolume() << endl;
         }
         if (mcobj.isfluid() && !(iter % mcobj.fluidizeevery())) {
-            num_bond_change = mcobj.monte_carlo_fluid(Pos, mesh, av_bond_len);
+            num_bond_change = mcobj.monte_carlo_fluid(Pos, mesh);
             cout << "fluid stats " << num_bond_change << " bonds flipped" << endl;
         }
         mcobj.write_energy(fileptr, iter);

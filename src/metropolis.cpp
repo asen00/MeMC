@@ -50,7 +50,7 @@ void McP::setEneVol() {
 /*-----------------------*/
 double McP::evalEnergy(Vec3d *Pos, MESH_p mesh){
   // if (fileptr.is_open()) {
-  // fileptr << itr << "  " << (double)acceptedmoves/(double)one_mc_iter<< "  "; 
+  // fileptr << itr << "  " << (double)acceptedmoves/(double)one_mc_iter<< "  ";
   bende = beobj.bending_energy_total(Pos, mesh);
   stretche = steobj.stretch_energy_total(Pos, mesh);
     // fileptr << bende << "  "<<stretche << "  ";
@@ -199,6 +199,9 @@ pair<double, double> McP::energy_mc_3d(Vec3d *pos, MESH_p mesh, int idx) {
    E_b += beobj.bending_energy_ipart_neighbour(pos, mesh, idx);
    E_s = steobj.stretch_energy_ipart(pos, (int *)(mesh.node_nbr_list + cm_idx),
                num_nbr, idx, mesh.nghst, mesh.bdry_type, mesh.boxlen, mesh.edge);
+
+   
+
    //   if(st_p.do_stick)
    //   E_stick = lj_bottom_surface(pos[idx].z, st_p.is_attractive[idx],
    //       st_p.pos_bot_wall, st_p.epsilon, st_p.sigma); 
@@ -251,21 +254,24 @@ int McP::monte_carlo_3d(Vec3d *pos, MESH_p mesh){
             mesh.bdry_type, mesh.boxlen, mesh.edge);
     dvol=0.5*(vol_f - vol_i);
     //
-    if(steobj.dovol()){
-    //   de_vol = vol_energy_change(mbrane, vol_p, dvol);
-    //   // cout << de << "\t";
-    //   de = de + de_vol;
-    //     
-    }
-    if(steobj.dopressure()){
-      de_pressure = steobj.PV_change(dvol);
-      de = de + de_pressure;
-    }
-    if (algo == "mpolis") {
-      yes = Boltzman(de, 0.0);
-    } else if (algo == "glauber") {
-      yes = Glauber(de, 0.0);
-    }
+    yes = Boltzman(de, 0.0);
+    // if(steobj.dovol()){
+    // //   de_vol = vol_energy_change(mbrane, vol_p, dvol);
+    // //   // cout << de << "\t";
+    // //   de = de + de_vol;
+    // //     
+    // }
+
+    // if(steobj.dopressure()){
+    //   de_pressure = steobj.PV_change(dvol);
+    //   de = de + de_pressure;
+    // }
+
+    // if (algo == "mpolis") {
+    //   yes = Boltzman(de, 0.0);
+    // } else if (algo == "glauber") {
+    //   yes = Glauber(de, 0.0);
+    // }
     //
     if(yes) {
       acceptedmoves +=  1;
@@ -283,7 +289,7 @@ int McP::monte_carlo_3d(Vec3d *pos, MESH_p mesh){
   return acceptedmoves;
 }
 //
-int McP::monte_carlo_fluid(Vec3d *pos, MESH_p mesh, double av_bond_len) {
+int McP::monte_carlo_fluid(Vec3d *pos, MESH_p mesh) {
 
   int i, j, move;
   int nnbr_del1;
@@ -302,6 +308,7 @@ int McP::monte_carlo_fluid(Vec3d *pos, MESH_p mesh, double av_bond_len) {
   Vec3d bef_ij, aft_ij;
 
   double KAPPA;
+  double av_bond_len=mesh.av_bond_len;
   bool yes, logic;
 
   nframe = get_nstart(mesh.N, mesh.bdry_type);

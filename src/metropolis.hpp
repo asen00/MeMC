@@ -11,7 +11,7 @@ public :
   McP (BE &beobj, STE &steobj): beobj(beobj), steobj(steobj) {};
   int monte_carlo_3d(Vec3d *pos, MESH_p mesh);
   pair<double,double> energy_mc_3d(Vec3d *pos, MESH_p mesh, int);
-  int monte_carlo_fluid(Vec3d *, MESH_p, double);
+  int monte_carlo_fluid(Vec3d *, MESH_p);
   bool Boltzman(double DE, double activity);
   bool Glauber(double DE, double activity);
   int initMC(int, std::string);
