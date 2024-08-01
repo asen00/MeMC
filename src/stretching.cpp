@@ -47,7 +47,7 @@ double STE::stretch_energy_ipart(Vec3d *pos,int *node_nbr, int num_nbr, int idx,
    idx_ener = 0e0;
    // HH = para.coef_str/(para.av_bond_len*para.av_bond_len);
    HH = YY*sqrt(3)/2;
-   if (bdry_type==1||idx<edge){
+   if (bdry_type == 1 || idx>edge){
       for (i =0; i < num_nbr; i++){
          j = node_nbr[i];
          rij = pos[idx] - pos[j];
@@ -101,7 +101,7 @@ double STE::area_ipart(Vec3d *pos, int *node_nbr, int num_nbr, int idx,
     Vec3d xij, xijp1;
     double area_energy_idx=0;
     double area_idx=0;
-    if (bdry_type==1||idx<edge){
+    if (bdry_type==1||idx>edge){
       for (int k = 0; k < num_nbr; ++k){
         jdx = node_nbr[k];
         jdxp1 = node_nbr[(k+1)%num_nbr];
@@ -199,7 +199,7 @@ double STE::volume_ipart(Vec3d *pos, int *node_nbr,
     //
     volume1 = 0e0;
     ri = pos[idx];
-    if (bdry_type==1||idx<edge){
+    if (bdry_type==1||idx>edge){
       for (i =0; i < num_nbr; i++){
         j = node_nbr[i];
         k=node_nbr[(i+1)%num_nbr];

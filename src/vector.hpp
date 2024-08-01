@@ -4,12 +4,6 @@
 #include <iostream>
 #include <math.h>
 using namespace std;
-/*----------------------------------------*/
-// typedef class Vec3d Vec3d;
-/*-----------------------------------------*/
-typedef struct{
-  double x,y;
-}Vec2d;
 /*-----------------------------------------*/
 class Vec3d{
 public:
@@ -26,6 +20,21 @@ public:
   // Vec3d (double)*operator;
 private:
 };
+/*-----------------------------------------*/
+class Vec2d{
+public:
+  double x,y;
+  Vec2d(double a, double b){
+     x=a, y=b;
+  }
+  Vec2d();
+private:
+};
+
+inline Vec2d::Vec2d(){
+  x = 0.0;
+  y = 0.0;  
+}
 /*-----------------------------------------*/
 inline Vec3d::Vec3d(){
   x = 0.0;
@@ -96,6 +105,7 @@ inline Vec3d Vec3d::operator/(double param){
   temp.z=z/param;
   return(temp);
 }
+/*---------------------------------------*/
 inline void printnorm(Vec3d* a, int N){
   for (int i = 0; i < N; ++i){
     cout<<sqrt(a[i].x*a[i].x + a[i].y*a[i].y + a[i].z*a[i].z)<<"\n";

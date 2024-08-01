@@ -66,12 +66,12 @@ subroutine Stick_listread(do_stick, pos_bot_wall, sigma, epsilon, &
     close(unit=100)
 end subroutine
 
-subroutine BendRead(coef_bend, minC, maxC, theta, spcurv, parafile) bind(c, name="BendRead")
-  real (kind=c_double) :: coef_bend, minC, maxC, theta, spcurv
+subroutine BendRead(bend1, bend2, spC1, spC2, parafile) bind(c, name="BendRead")
+  real (kind=c_double) :: bend1, bend2, spC1, spC2
   character(kind=c_char, len=1), dimension(char_len), intent(in) ::  parafile
   character(len=char_len) :: f_fname
 
-  namelist /Bendpara/ coef_bend, minC, maxC, theta, spcurv 
+  namelist /Bendpara/ bend1, bend2, spC1, spC2 
     call convert_cstr_fstr(parafile, f_fname)
     open(unit=200,file=f_fname,status='old')
     read(unit=200,nml=Bendpara)
@@ -91,6 +91,18 @@ subroutine MeshRead(bdry_cdt, nghst, radius, parafile) bind(c, name="MeshRead")
     close(unit=200)
 end subroutine
 
+subroutine LipidRead(ncomp, kai, lipfrac, parafile) bind(c, name="LipidRead")
+    integer(kind=c_int) :: ncomp
+    real(kind=c_double) :: kai, lipfrac
+    character(kind=c_char, len=1), dimension(char_len), intent(in) ::  parafile
+    character(len=char_len) :: f_fname
+
+    namelist /Lipidpara/ ncomp, kai, lipfrac
+    call convert_cstr_fstr(parafile, f_fname)
+    open(unit=200, file=f_fname, status='old')
+    read(unit=200, nml=Lipidpara)
+    close(unit=200)
+end subroutine
 
 
 subroutine StretchRead(YY, do_volume, is_pressurized, coef_vol_expansion, &
@@ -103,7 +115,7 @@ subroutine StretchRead(YY, do_volume, is_pressurized, coef_vol_expansion, &
   namelist /Stretchpara/ YY, do_volume, is_pressurized, coef_vol_expansion, &
                          pressure, coef_area_expansion, do_area 
     call convert_cstr_fstr(parafile, f_fname)
-    open(unit=200,file=f_fname,status='old')
+    open(unit=200,file=f_fname, status='old')
     read(unit=200,nml=Stretchpara)
     close(unit=200)
 end subroutine
@@ -225,19 +237,6 @@ subroutine Spring_listread(do_spring, icompute, nPole_eq_z, sPole_eq_z, &
     call convert_cstr_fstr(parafile, f_fname)
     open(unit=100,file=f_fname,status='old')
     read(unit=100,nml=springpara)
-    close(unit=100)
-    end subroutine
-
-subroutine LipidRead(ncomp, &
-        parafile) bind(c, name='Lipid_listread')
-    integer(kind=c_int) :: ncomp
-    character(kind=c_char, len=1), dimension(char_len), intent(in) ::  parafile
-    character(len=char_len) :: f_fname
-
-    namelist /lipidpara/ ncomp
-    call convert_cstr_fstr(parafile, f_fname)
-    open(unit=100, file=f_fname, status='old')
-    read(unit=100, nml=lipidpara)
     close(unit=100)
 end subroutine
 

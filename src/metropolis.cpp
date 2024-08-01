@@ -4,16 +4,21 @@
 
 #include <cmath>
 #include <cstring>
+#include <tuple>
+#include <functional>
+#include <algorithm>
+
 const double pi = 3.14159265358979323846264;
 // #include <cstdio>
 // #include <iomanip>
 // #include <sstream>
 // #include <unistd.h>
 
+// using namespace std;
 extern "C" void  MC_listread(char *, double *, double *, bool *,int *, int *, 
                   bool *, int *, int *, double *, char *);
 int get_nstart(int, int);
-int McP::initMC(int N, std::string fname){
+int McP::initMC(int N, string fname){
   char tmp_fname[128], temp_algo[128];
   string parafile, outfile;
   parafile = fname+"/para_file.in";
@@ -53,11 +58,13 @@ double McP::evalEnergy(Vec3d *Pos, MESH_p mesh){
   // fileptr << itr << "  " << (double)acceptedmoves/(double)one_mc_iter<< "  ";
   bende = beobj.bending_energy_total(Pos, mesh);
   stretche = steobj.stretch_energy_total(Pos, mesh);
+  // It's okay to have if statement here.
+  if (lipidobj.getcomp()>1) {regsole = lipidobj.reg_soln_tot(Pos, mesh);}
     // fileptr << bende << "  "<<stretche << "  ";
   totvol = steobj.volume_total(Pos, mesh);
     // totarea = steobj.area_total(Pos, mesh);
   // }
-  totEner = bende+stretche;
+  totEner = bende+stretche+regsole;
   if (steobj.dopressure()){
     pre = -steobj.getpressure() * totvol;
     // fileptr << pre << "  ";
@@ -70,14 +77,14 @@ double McP::evalEnergy(Vec3d *Pos, MESH_p mesh){
   EneMonitored = totEner;
   VolMonitored = totvol;
   // }
-
   return totEner;
 }
 /*-----------------------*/
-void McP::write_energy(std::fstream &fileptr, int itr){
+void McP::write_energy(fstream &fileptr, int itr){
   if (fileptr.is_open()){
     fileptr << itr << " " << (double)acceptedmoves/(double)one_mc_iter<< "  ";
     fileptr << bende << " " << stretche << "  ";
+    if (lipidobj.getcomp()>1) fileptr << regsole << " ";
   }
   if (steobj.dopressure()) fileptr << pre << "  ";
   fileptr << EneMonitored  << "  " << VolMonitored  << endl;
@@ -94,7 +101,7 @@ int McP::onemciter(){return one_mc_iter;}
 // int McP::monitoredVol(){return VolMonitored;}
 // int McP::monitoredEn(){return EneMonitored;}
 //
-int del_nbr(int *nbrs, int numnbr, int idx) {
+int del_nbr(int *nbrs, int numnbr, int idx){
   // delet int idx between i1 and i2 in the nbrs list
   int new_numnbr, delete_here;
   bool logic;
@@ -184,12 +191,11 @@ bool McP::Glauber(double DE, double activity){
   return yes;
 }
 //
-pair<double, double> McP::energy_mc_3d(Vec3d *pos, MESH_p mesh, int idx) {
-   double E_b, E_s;
+std::vector<double> McP::energy_mc_3d(Vec3d *pos, MESH_p mesh, int idx)
+{
+   double E_b, E_s, E_rs;
+   vector<double> energy;
    int cm_idx, num_nbr;
-
-   E_b = 0.0;
-   E_s = 0.0;
 
    cm_idx = mesh.nghst * idx;
    num_nbr = mesh.numnbr[idx];
@@ -200,8 +206,14 @@ pair<double, double> McP::energy_mc_3d(Vec3d *pos, MESH_p mesh, int idx) {
    E_s = steobj.stretch_energy_ipart(pos, (int *)(mesh.node_nbr_list + cm_idx),
                num_nbr, idx, mesh.nghst, mesh.bdry_type, mesh.boxlen, mesh.edge);
 
-   
-
+   energy.push_back(E_b);
+   energy.push_back(E_s);
+   // Do not have if-else statements here.
+   if (lipidobj.getcomp()>1){
+      E_rs = lipidobj.reg_soln_ipart(pos, mesh, idx).x;
+      E_rs += lipidobj.reg_soln_ipart_neighbour(pos, mesh, idx);  
+   }
+   energy.push_back(E_rs);
    //   if(st_p.do_stick)
    //   E_stick = lj_bottom_surface(pos[idx].z, st_p.is_attractive[idx],
    //       st_p.pos_bot_wall, st_p.epsilon, st_p.sigma); 
@@ -209,82 +221,85 @@ pair<double, double> McP::energy_mc_3d(Vec3d *pos, MESH_p mesh, int idx) {
    //     if(afm.do_afm) E_afm = lj_afm(pos[idx], afm);
 
    //     if(spring.do_spring) E_spr = spring_energy(pos[idx], idx, mesh, spring);
-
-   return {E_b,E_s};
+   return energy;
 }
 //
 int McP::monte_carlo_3d(Vec3d *pos, MESH_p mesh){
-  int i, num_nbr, cm_idx;
-  double x_o, y_o, z_o, x_n, y_n, z_n;
-  double de, debe, dest;
-  pair<double, double> Eini, Efin;
-  double dxinc, dyinc, dzinc;
-  double vol_i, vol_f;
-  double dvol, de_vol, ini_vol, de_pressure;
-  bool yes;
-  int nframe;
+   int i, num_nbr, cm_idx;
+   double x_o, y_o, z_o, x_n, y_n, z_n;
+   double de, debe, dest, ders;
+   // vector<double, double, double> Eini, Efin;
+   double dxinc, dyinc, dzinc;
+   double vol_i, vol_f;
+   double dvol, de_vol, ini_vol, de_pressure;
+   bool yes;
+   int nframe;
   //
-  nframe = get_nstart(mesh.N, mesh.bdry_type);
-  acceptedmoves = 0;
-  for (i = 0; i < one_mc_iter; i++) {
-    int idx = RandomGenerator::intUniform(nframe, mesh.N-1);
-    cm_idx = idx*mesh.nghst;
-    num_nbr = mesh.numnbr[idx];
-    Eini = energy_mc_3d(pos, mesh, idx);
-    vol_i = steobj.volume_ipart(pos, (int *) (mesh.node_nbr_list + cm_idx),
-            num_nbr, idx, mesh.bdry_type, mesh.boxlen, mesh.edge);
-    //
-    x_o = pos[idx].x; y_o = pos[idx].y; z_o = pos[idx].z;
-    //
-    dxinc = (dfac) * (RandomGenerator::generateUniform(-1.0,1.0));
-    dyinc = (dfac) * (RandomGenerator::generateUniform(-1.0,1.0));
-    dzinc = (dfac) * (RandomGenerator::generateUniform(-1.0,1.0));
-    //
-    x_n = x_o + dxinc; y_n = y_o + dyinc; z_n = z_o + dzinc;
-    //
-    pos[idx].x = x_n; pos[idx].y = y_n; pos[idx].z = z_n;
-    //
-    Efin = energy_mc_3d(pos, mesh, idx);
-    debe = Efin.first - Eini.first;
-    dest = Efin.second - Eini.second;
-    de = debe + dest;
-    //
-    vol_f = steobj.volume_ipart(pos,
-            (int *) (mesh.node_nbr_list + cm_idx), num_nbr, idx,
-            mesh.bdry_type, mesh.boxlen, mesh.edge);
-    dvol=0.5*(vol_f - vol_i);
-    //
-    yes = Boltzman(de, 0.0);
-    // if(steobj.dovol()){
-    // //   de_vol = vol_energy_change(mbrane, vol_p, dvol);
-    // //   // cout << de << "\t";
-    // //   de = de + de_vol;
-    // //     
-    // }
+   nframe = get_nstart(mesh.N, mesh.bdry_type);
+   acceptedmoves = 0;
+   for (i = 0; i < one_mc_iter; i++) {
+      int idx = RandomGenerator::intUniform(nframe, mesh.N-1);
+      cm_idx = idx*mesh.nghst;
+      num_nbr = mesh.numnbr[idx];
+      auto Eini = energy_mc_3d(pos, mesh, idx);
+      vol_i = steobj.volume_ipart(pos, (int *) (mesh.node_nbr_list + cm_idx),
+               num_nbr, idx, mesh.bdry_type, mesh.boxlen, mesh.edge);
+       //
+      x_o = pos[idx].x; y_o = pos[idx].y; z_o = pos[idx].z;
+       //
+      dxinc = (dfac) * (RandomGenerator::generateUniform(-1.0,1.0));
+      dyinc = (dfac) * (RandomGenerator::generateUniform(-1.0,1.0));
+      dzinc = (dfac) * (RandomGenerator::generateUniform(-1.0,1.0));
+       //
+      x_n = x_o + dxinc; y_n = y_o + dyinc; z_n = z_o + dzinc;
+       //
+      pos[idx].x = x_n; pos[idx].y = y_n; pos[idx].z = z_n;
+       //
+      auto Efin = energy_mc_3d(pos, mesh, idx);
 
-    // if(steobj.dopressure()){
-    //   de_pressure = steobj.PV_change(dvol);
-    //   de = de + de_pressure;
-    // }
+      debe=Efin[0]-Eini[0];
+      dest=Efin[1]-Eini[1];
+      ders=Efin[2]-Eini[2];
 
-    // if (algo == "mpolis") {
-    //   yes = Boltzman(de, 0.0);
-    // } else if (algo == "glauber") {
-    //   yes = Glauber(de, 0.0);
-    // }
-    //
-    if(yes) {
-      acceptedmoves +=  1;
-      EneMonitored += de;
-      VolMonitored += 2*dvol;
-      bende += debe;
-      stretche += dest;
-      pre += de_pressure;
-    } else {
-      pos[idx].x = x_o;
-      pos[idx].y = y_o;
-      pos[idx].z = z_o;
-    }
+      de = debe+dest+ders;
+      //
+      vol_f = steobj.volume_ipart(pos,
+               (int *) (mesh.node_nbr_list + cm_idx), num_nbr, idx,
+               mesh.bdry_type, mesh.boxlen, mesh.edge);
+      dvol=0.5*(vol_f - vol_i);
+       //
+      yes = Boltzman(de, 0.0);
+       // if(steobj.dovol()){
+       // //   de_vol = vol_energy_change(mbrane, vol_p, dvol);
+       // //   // cout << de << "\t";
+       // //   de = de + de_vol;
+       // //     
+       // }
+
+       // if(steobj.dopressure()){
+       //   de_pressure = steobj.PV_change(dvol);
+       //   de = de + de_pressure;
+       // }
+
+       // if (algo == "mpolis") {
+       //   yes = Boltzman(de, 0.0);
+       // } else if (algo == "glauber") {
+       //   yes = Glauber(de, 0.0);
+       // }
+       //
+      if(yes) {
+         acceptedmoves +=  1;
+         EneMonitored += de;
+         VolMonitored += 2*dvol;
+         bende += debe;
+         stretche += dest;
+         regsole += ders;
+         pre += de_pressure;
+      } else {
+         pos[idx].x = x_o;
+         pos[idx].y = y_o;
+         pos[idx].z = z_o;
+      }
   }
   return acceptedmoves;
 }
@@ -326,15 +341,15 @@ int McP::monte_carlo_fluid(Vec3d *pos, MESH_p mesh) {
       nnbr_del1 = mesh.numnbr[idx_del1];
       idxn = RandomGenerator::intUniform(0, mesh.nghst-1 );
       if (mesh.node_nbr_list[cm_idx_del1 + idxn] != -1) {
-        idx_del2 = mesh.node_nbr_list[cm_idx_del1 + idxn];
-        cm_idx_del2 = mesh.nghst * idx_del2;
-        up = (idxn + 1 + nnbr_del1) % nnbr_del1;
-        down = (idxn - 1 + nnbr_del1) % nnbr_del1;
-        idx_add1 = mesh.node_nbr_list[idx_del1 * mesh.nghst + up];
-        idx_add2 = mesh.node_nbr_list[idx_del1 * mesh.nghst + down];
-        logic = idx_del2 > nframe && idx_add1 > nframe && idx_add2 > nframe;
-      } else {
-        logic = false;
+         idx_del2 = mesh.node_nbr_list[cm_idx_del1 + idxn];
+         cm_idx_del2 = mesh.nghst * idx_del2;
+         up = (idxn + 1 + nnbr_del1) % nnbr_del1;
+         down = (idxn - 1 + nnbr_del1) % nnbr_del1;
+         idx_add1 = mesh.node_nbr_list[idx_del1 * mesh.nghst + up];
+         idx_add2 = mesh.node_nbr_list[idx_del1 * mesh.nghst + down];
+         logic = idx_del2 > nframe && idx_add1 > nframe && idx_add2 > nframe;
+      }else {
+         logic = false;
       }
     }
 

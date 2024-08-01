@@ -7,6 +7,8 @@
 #include <sstream>
 #include <fstream>
 #include <string>
+#include <vector>
+
 using namespace std;
 /*-----------------------------------------------*/
 double SqEr(double Arr1[], double Arr2[],int nn){
@@ -178,7 +180,6 @@ void min(int *aminind, double *aminval, Vec3d *pos, int ndim,char dirn){
   *aminval=minval;
 }
 /*-----------------------------------------------*/
-/*-----------------------------------------------*/
 // double height_rms(Vec3d *Pos, MBRANE_p mbrane){
 //   double radius=mbrane.radius;
 //   double N=mbrane.N;
@@ -269,6 +270,8 @@ int print_sanity(Vec3d *pos, int *nbr_del1, int *nbr_del2, int *nbr_add1,
   fclose(fid);
   return 0;
 }
+
+
 
 // double determinant(Vec3d X1, Vec3d X2, Vec3d X3, double len) {
 //   Vec3d A = diff_pbc(X1, X2, len);

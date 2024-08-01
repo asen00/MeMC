@@ -8,7 +8,6 @@ Vec3d Vec3d_add(Vec3d s1, Vec3d s2, double fac){
     add.z = s1.z + fac*s2.z;
     return add;
 }
-
 /*---------------------------------------*/
 Vec3d diff_pbc(Vec3d r1, Vec3d r2, double len){
     Vec3d rij;
@@ -25,4 +24,3 @@ Vec3d diff_pbc(Vec3d r1, Vec3d r2, double len){
 
     return rij;
 }
-

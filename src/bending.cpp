@@ -4,28 +4,36 @@
 
 #define sign(x) ((x > 0) ? 1 : ((x < 0) ? -1 : 0))
 
-extern "C" void BendRead(double *, double *, double *, double *, double *, char *);
+extern "C" void BendRead(double *, double *, double *, double *, char *);
 int get_nstart(int , int);
 /*------------------------*/
 int BE::initBE(int N, std::string fname){
-  char tmp_fname[128];
-  string parafile, outfile;
+   char tmp_fname[128];
+   string parafile, outfile;
 
-  parafile = fname+"/para_file.in";
-  sprintf(tmp_fname, "%s", parafile.c_str());
-  BendRead(&coef_bend, &minC, &maxC, &theta, &spcurv, tmp_fname);
+   parafile = fname+"/para_file.in";
+   sprintf(tmp_fname, "%s", parafile.c_str());
+   BendRead(&bend1, &bend2, &spC1, &spC2, tmp_fname);
 
-  ofstream out_;
-  out_.open( fname+"/bendpara.out");
-  out_<< "# =========== bending parameters ==========" << endl
+   spcurv=spC1;
+
+   ofstream out_;
+   out_.open( fname+"/bendpara.out");
+   out_<< "# =========== bending parameters ==========" << endl
       << " N " << N << endl
-      << " coef_bend = " << coef_bend << endl
-      << " minC " << minC << endl
-      << " maxC " << maxC << endl
-      << " theta " << theta << endl
-      << " spcurv " << spcurv << endl;
-  out_.close();
+      << " bend1 = " << bend1 << endl
+      << " bend2 = " << bend2 << endl
+      << " spC1 " << spC1 << endl
+      << " spC2 " << spC2 << endl;
+   out_.close();
    return 0;
+}
+/*-------------------------------------------------*/
+void BE::init_coefbend(std::vector<int> lipA, int N){
+    for (int i = 0; i < N; ++i) {
+        if (lipA[i]) coef_bend.push_back(bend2);
+        else coef_bend.push_back(bend1);
+    }
 }
 /*-------------------------------------------------*/
 double BE::bending_energy_ipart(Vec3d *pos, int *node_nbr, int num_nbr, int idx,
@@ -51,7 +59,7 @@ double BE::bending_energy_ipart(Vec3d *pos, int *node_nbr, int num_nbr, int idx,
     double cot_sum,liksq,likpsq,ljkpsq;
     double sigma_i = 0e0;
     // store all the lengths
-    if (bdry_type==1 || idx<=edge){
+    if (bdry_type == 1 || idx>edge){
         for (int j = 0; j < num_nbr; ++j){
             jdx = node_nbr[j];
             kdx = node_nbr[(j+1)%num_nbr]; // this is same as kdx
@@ -71,7 +79,7 @@ double BE::bending_energy_ipart(Vec3d *pos, int *node_nbr, int num_nbr, int idx,
             ljksq[j] = inner_product(xjk,xjk);
             area_ijk[j] = 0.5*norm(cross_product(xij[j],xjk));
         }
-    }    
+    }
     // Now compute all the angles
     for (int j = 0; j < num_nbr; ++j){
         liksq=lijsq[(j+1)%num_nbr];
@@ -97,7 +105,7 @@ double BE::bending_energy_ipart(Vec3d *pos, int *node_nbr, int num_nbr, int idx,
     nhat = nhat/norm(nhat);
     lap_bel = cot_times_rij/sigma_i;
     lap_bel_t0 = nhat*spcurv;
-    bend_ener = 0.5*coef_bend*sigma_i*normsq(lap_bel-lap_bel_t0);
+    bend_ener = 0.5*coef_bend[idx]*sigma_i*normsq(lap_bel-lap_bel_t0);
     return bend_ener;
 }
 /*------------------------*/
@@ -144,6 +152,6 @@ double BE::bending_energy_total(Vec3d *pos, MESH_p mesh){
         be += bending_energy_ipart(pos, (int *) (mesh.node_nbr_list + cm_idx), 
                 num_nbr, idx, mesh.bdry_type, mesh.boxlen, mesh.edge);
     }
-     return be;
+    return be;
 }
 /*-------------------------------------------------------------------------------------*/

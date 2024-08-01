@@ -8,16 +8,17 @@
 #include <cstdlib>
 #include <fstream>
 #include <iomanip>
-
 #include <mpi.h>
+#include <fstream>
+#include <iostream>
+
 #include "metropolis.hpp"
 #include "bending.hpp"
 #include "stretching.hpp"
 #include "random_gen.hpp"
 #include "hdf5_io.hpp"
 #include "misc.hpp"
-#include <fstream>
-#include <iostream>
+#include "multicomp.hpp"
 
 extern "C" void MeshRead(int *, int *, double *, char *);
 
@@ -50,7 +51,7 @@ pair<double, double> get_box_dim(Vec3d *Pos, MESH_p mesh){
     return {xlen, ylen};
 }
 
-double start_simulation(Vec3d *Pos, MESH_p mesh, McP mcobj, STE &stretchobj, 
+double start_simulation(Vec3d *Pos, MESH_p &mesh, McP mcobj, STE &stretchobj, 
     string outfolder, double radius, int &residx){
 
     double Pole_zcoord;
@@ -58,15 +59,25 @@ double start_simulation(Vec3d *Pos, MESH_p mesh, McP mcobj, STE &stretchobj,
     int tdumpskip, titer;
     string resfile;
 
-    hdf5_io_read_double( (double *)Pos,  outfolder+"/input.h5", "pos");
+    hdf5_io_read_double( (double *)Pos,  outfolder+"/input.h5", "pos" );
     scale_pos(Pos, radius, mesh.N);
-    if (isPlaner(Pos,mesh.N)){mesh.topology="flat"; cout << "flat" << endl;}
-    else{mesh.topology="sphere"; cout << "sphere" << endl;}
-    mesh.boxlen=get_box_dim(Pos, mesh).first;
-    mesh.edge = get_nstart(mesh.N, 1);
-
     hdf5_io_read_mesh((int *) mesh.numnbr, (int *) mesh.node_nbr_list, 
         outfolder+"/input.h5");
+
+    if (isPlaner(Pos,mesh.N)){
+        mesh.topology="flat";
+        cout << "flat" << endl;
+        mesh.edge = get_nstart(mesh.N, 1);
+        // To make sure that the edges do not coincide after pbc.
+        mesh.boxlen=get_box_dim(Pos, mesh).first*(1+1/sqrt(mesh.N));
+    }
+    else{
+        mesh.topology="sphere"; 
+        // cout << "sphere" << endl;
+        mesh.edge = 0;
+        mesh.boxlen=0;
+    }
+
     ave_bond_len = stretchobj.init_eval_lij_t0(Pos, mesh, mcobj.isfluid(),
         mesh.boxlen);
     if(!mcobj.isrestart()) { residx = 0; }
@@ -119,7 +130,8 @@ int main(int argc, char *argv[]){
     double av_bond_len, Etot, radius;
     BE bendobj;
     STE stretchobj;
-    McP mcobj(bendobj, stretchobj);
+    MulCom lipidobj;
+    McP mcobj(bendobj, stretchobj, lipidobj);
     Vec3d *Pos;
     MESH_p mesh;
     string outfolder, para_file, outfile, filename;
@@ -135,8 +147,8 @@ int main(int argc, char *argv[]){
     //
     para_file = outfolder+"/para_file.in";
     sprintf(tmp_fname, "%s", para_file.c_str());
-    MeshRead(&mesh.bdry_type, &mesh.nghst, &radius, tmp_fname);
 
+    MeshRead(&mesh.bdry_type, &mesh.nghst, &radius, tmp_fname);
     mesh.N = (int)hdf5_io_get_Np(outfolder+"/input.h5", "pos")/3;
     Pos = (Vec3d *)calloc(mesh.N, sizeof(Vec3d));
     mesh.numnbr = (int *)calloc(mesh.N, sizeof(int));
@@ -145,21 +157,23 @@ int main(int argc, char *argv[]){
     mcobj.initMC(mesh.N, outfolder);
     bendobj.initBE(mesh.N, outfolder);
     stretchobj.initSTE(mesh.N, outfolder);
-    mesh.av_bond_len = start_simulation(Pos, mesh, mcobj, stretchobj, outfolder, radius,
-                residx);
+    mesh.av_bond_len = start_simulation(Pos, mesh, mcobj, stretchobj, outfolder, 
+                radius, residx);
+    lipidobj.initMulCom(mesh.N, mesh.av_bond_len, bendobj, outfolder);
 
     // How often do you want to compute the total energy?
     if (mcobj.isfluid()) recaliter=mcobj.fluidizeevery();
     else recaliter=10;
-    // cout << recaliter << endl;
-
+    
     clock_t timer;
     Etot = mcobj.evalEnergy(Pos, mesh);
+    cout << Etot << endl;
+    exit(1);
     mcobj.write_energy(fileptr, iter);
 
     fstream outfile_terminal(outfolder+"/terminal.out", ios::app);
     cout << "# The seed value is " << seed_v << endl;
-    if(!mcobj.isrestart()) diag_wHeader(bendobj,  stretchobj, fileptr);
+    if(!mcobj.isrestart()) diag_wHeader(bendobj, stretchobj, fileptr);
     if(mcobj.isrestart()) fileptr << "# Restart index " << residx << endl;
 
     for(iter=residx; iter < mcobj.totaliter(); iter++){

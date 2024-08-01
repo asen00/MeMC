@@ -3,6 +3,8 @@
 #include <string>
 #include "mesh.hpp"
 #include "vector.hpp"
+#include "misc.hpp"
+#include <vector>
 // #include "global.h"
 class BE{
 public : 
@@ -10,12 +12,15 @@ public :
   double bending_energy_ipart(Vec3d *pos, int *node_nbr, int num_nbr,
                               int idx, int, double, int);
   double bending_energy_total(Vec3d *pos, MESH_p mesh);
+  void init_coefbend(std::vector<int> phi, int N);
   int initBE(int, std::string);
+  void printbend(){print(coef_bend);}
+  int getbend(int i){return coef_bend[i];}
 private:
-    double coef_bend;
-    string which_spcurv;
-    double minC, maxC, theta;
-    double spcurv;
+  double bend1, bend2, spC1, spC2;
+  std::vector<double> coef_bend;
+  // std::vector<double> spcurv;
+  double spcurv;
 /*------------------------*/
 double cotangent(Vec3d si, Vec3d sk, Vec3d sj){
   ///

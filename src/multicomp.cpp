@@ -1,5 +1,58 @@
+#include <ctime>
+#include <algorithm>
+#include <fstream>
+
 #include "multicomp.hpp"
 #include "vector.hpp"
+
+extern "C" void LipidRead(int *, double *, double *, char *);
+
+void fillPoints(std::vector<int>& points, double fraction, int N){
+   
+   int numOnes = static_cast<int>(fraction * N);
+   int numZeros = N - numOnes;
+
+   // Fill the vector with the required number of 1s and 0s
+   for (int i = 0; i < numOnes; ++i) points.push_back(1);
+   for (int i = numOnes; i < N; ++i) points.push_back(0);
+
+   // Shuffle the vector to mix 0s and 1s
+   std::srand(unsigned(std::time(0)));
+   std::random_shuffle(points.begin(), points.end());
+}
+//
+int MulCom::initMulCom(int N, double av_bond_len, BE &bendobj, std::string fname){
+    char tmp_fname[128];
+    string parafile, outfile;
+
+    parafile = fname+"/para_file.in";
+    sprintf(tmp_fname, "%s", parafile.c_str() );
+
+    LipidRead(&ncomp, &kai, &lipfrac, tmp_fname);
+    epssqby2=(4-2*kai)*av_bond_len*av_bond_len;
+
+    fillPoints(lipA, lipfrac, N);
+   
+    bendobj.init_coefbend(lipA, N);
+
+    std::ofstream out_;
+    out_.open(fname+"/lipidpara.out");
+    out_<< "# =========== Lipid parameters ==========" << endl
+      << " N " << N << endl
+      << " ncom = " << ncomp << endl
+      << " kai " << kai << endl
+      << " lipfrac " << lipfrac << endl
+      << " epssqby2 = " << epssqby2 << endl;
+    out_.close();
+
+    out_.open(fname+"/lipA.txt");
+    for (int value : lipA){
+        out_ << value << "\n";  // Save each element on a new line
+    }
+    out_.close();
+
+    return 0;
+}
 //
 Vec2d MulCom::gradphi_sq(double *phi, Vec3d *pos, int *node_nbr, int num_nbr, 
     int idx, int bdry_type, double lenth, int edge){
@@ -11,7 +64,7 @@ Vec2d MulCom::gradphi_sq(double *phi, Vec3d *pos, int *node_nbr, int num_nbr,
     ri = pos[idx];
     Vec3d gradphi;
     Vec2d grad_ar;
-    if (bdry_type==1||idx < edge){
+    if (bdry_type==1||idx > edge){
         for (j = 0; j < num_nbr; j++){
             jdx = node_nbr[j];
             k = (j+1)%num_nbr;
@@ -65,27 +118,29 @@ void MulCom::phi_ipart_neighbour(double *phi, MESH_p mesh, int idx){
     int num_nbr = mesh.numnbr[idx];
     phi[cnt] = phi_ipart((int *)(mesh.node_nbr_list + cm_idx), num_nbr, idx);
     for (j = idx*mesh.nghst; j < idx*mesh.nghst + mesh.numnbr[idx]; j++){
-       cnt+=1;
-       nbr = mesh.node_nbr_list[j];
-       num_nbr_j = mesh.numnbr[nbr];
-       cm_idx_nbr = nbr*mesh.nghst;
-       phi[cnt] = phi_ipart((int *) mesh.node_nbr_list + cm_idx_nbr, num_nbr_j,
-                 nbr);
+        cnt+=1;
+        nbr = mesh.node_nbr_list[j];
+        num_nbr_j = mesh.numnbr[nbr];
+        cm_idx_nbr = nbr*mesh.nghst;
+        phi[cnt] = phi_ipart((int *) mesh.node_nbr_list + cm_idx_nbr, num_nbr_j,
+                    nbr);
     }
 }
 //
 Vec2d MulCom::reg_soln_ipart(Vec3d *pos, MESH_p mesh, int idx){
-    /// TODO: Add interaction (chi*phi*(1-phi))
+    /// TODO: Add interaction (kai*phi*(1-phi))
     int num_nbr = mesh.numnbr[idx];
     double phi[1+num_nbr];
     phi_ipart_neighbour(phi, mesh, idx);
-    Vec2d grad_arr, out_array;
-    double mixenergy = phi[0]*log(phi[0]) + (1-phi[0])*log(1-phi[0]);
+    Vec2d grad_arr, out_array(0.0,0.0);
+    if(phi[0]==0||phi[0]==1) return out_array;
+    double mixenergy = phi[0]*log(phi[0]) + (1-phi[0])*log(1-phi[0])
+                        + kai*phi[0]*(1-phi[0]);
     // phi has a size of 1+num_nbr. You can't access phi[idx]
     int cm_idx = idx*mesh.nghst;
     grad_arr = gradphi_sq(phi, pos, (int *)(mesh.node_nbr_list + cm_idx),
-        num_nbr, idx, mesh.bdry_type, mesh.boxlen, mesh.edge);
-    out_array.x = mixenergy + grad_arr.x; /// actual free energy
+                num_nbr, idx, mesh.bdry_type, mesh.boxlen, mesh.edge);
+    out_array.x = mixenergy + epssqby2*grad_arr.x; /// actual free energy
     out_array.y = grad_arr.y;
     return out_array;
 }
@@ -102,7 +157,7 @@ double MulCom::reg_soln_ipart_neighbour(Vec3d *pos, MESH_p mesh, int idx){
    return regsol_fe;
 }
 //
-double MulCom::reg_soln_tot(Vec3d *pos, MESH_p mesh){  
+double MulCom::reg_soln_tot(Vec3d *pos, MESH_p mesh){
     int idx, st_idx;
     int num_nbr, cm_idx;
     double rsfe_tot;

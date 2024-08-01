@@ -2,15 +2,19 @@
 #define METROPOLIS_HPP
 #include <string>
 #include <fstream>
+#include <vector>
+
 #include "mesh.hpp"
 #include "vector.hpp"
 #include "bending.hpp"
 #include "stretching.hpp"
-class McP {
+#include "multicomp.hpp"
+class McP{
 public : 
-  McP (BE &beobj, STE &steobj): beobj(beobj), steobj(steobj) {};
+  McP (BE &beobj, STE &steobj, MulCom &lipidobj): 
+  beobj(beobj), steobj(steobj), lipidobj(lipidobj) {};
   int monte_carlo_3d(Vec3d *pos, MESH_p mesh);
-  pair<double,double> energy_mc_3d(Vec3d *pos, MESH_p mesh, int);
+  std::vector<double> energy_mc_3d(Vec3d *pos, MESH_p mesh, int);
   int monte_carlo_fluid(Vec3d *, MESH_p);
   bool Boltzman(double DE, double activity);
   bool Glauber(double DE, double activity);
@@ -29,6 +33,7 @@ public :
 private:
   BE &beobj;
   STE &steobj;
+  MulCom &lipidobj;
   std::string algo;
   double dfac;
   int one_mc_iter, tot_mc_iter, dump_skip;
@@ -39,7 +44,7 @@ private:
   int min_allowed_nbr;
   int fluidize_every;
   double fac_len_vertices;
-  double totEner, totvol, bende, stretche, pre;
+  double totEner, totvol, bende, stretche, pre, regsole;
   double EneMonitored, VolMonitored;
   double volt0;
   int acceptedmoves;
