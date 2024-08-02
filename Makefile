@@ -14,7 +14,7 @@ sources += src/stretching.cpp  src/hdf5_io.cpp  src/misc.cpp
 #
 object = obj/vector.o obj/metropolis.o obj/random_gen.o obj/bending.o
 object += obj/stretching.o obj/hdf5_io.o obj/misc.o
-object += obj/multicomp.o
+# object += obj/multicomp.o
 bindir = ./bin
 #
 #

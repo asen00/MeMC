@@ -1,0 +1,40 @@
+&Meshpara
+nghst=12
+bdry_cdt=1  !0=channel 1=frame anything else periodic
+radius=1.0
+/
+
+&mcpara
+Mcalgo = 'mpolis'
+dfac = 8.0
+kbt =  1.0
+is_restart = F
+tot_mc_iter = 1000
+dump_skip = 100
+is_fluid = F
+min_allowed_nbr = 4
+fac_len_vertices = 1.3
+fluidize_every = 1
+/
+
+&Bendpara
+coef_bend=16
+minC=0.0
+maxC=0.0
+theta=0.0
+spcurv=0.0
+/
+
+&Stretchpara
+YY= 5e3
+do_volume = F
+is_pressurized = F
+do_area = F
+coef_vol_expansion = 200 
+pressure = 2000
+coef_area_expansion = 100 
+/
+
+&Lipidpara
+ncomp=1
+/
