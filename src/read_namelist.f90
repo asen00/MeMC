@@ -91,13 +91,14 @@ subroutine MeshRead(bdry_cdt, nghst, radius, parafile) bind(c, name="MeshRead")
     close(unit=200)
 end subroutine
 
-subroutine LipidRead(ncomp, kai, lipfrac, parafile) bind(c, name="LipidRead")
+subroutine LipidRead(ncomp, kai, lipfrac, epssqby2, &
+    parafile) bind(c, name="LipidRead")
     integer(kind=c_int) :: ncomp
-    real(kind=c_double) :: kai, lipfrac
+    real(kind=c_double) :: kai, lipfrac, epssqby2
     character(kind=c_char, len=1), dimension(char_len), intent(in) ::  parafile
     character(len=char_len) :: f_fname
 
-    namelist /Lipidpara/ ncomp, kai, lipfrac
+    namelist /Lipidpara/ ncomp, kai, lipfrac, epssqby2
     call convert_cstr_fstr(parafile, f_fname)
     open(unit=200, file=f_fname, status='old')
     read(unit=200, nml=Lipidpara)

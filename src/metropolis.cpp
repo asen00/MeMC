@@ -65,6 +65,8 @@ double McP::evalEnergy(Vec3d *Pos, MESH_p mesh){
     // totarea = steobj.area_total(Pos, mesh);
   // }
   totEner = bende+stretche+regsole;
+  // cout << bende << " " << stretche << " " << regsole << endl;
+
   if (steobj.dopressure()){
     pre = -steobj.getpressure() * totvol;
     // fileptr << pre << "  ";
@@ -178,7 +180,7 @@ bool McP::Boltzman(double DE, double activity) {
   }
   return yes;
 }
-
+//
 bool McP::Glauber(double DE, double activity){
   /// @brief Glauber algorithm
   /// @param DE change in energy
@@ -194,7 +196,7 @@ bool McP::Glauber(double DE, double activity){
 std::vector<double> McP::energy_mc_3d(Vec3d *pos, MESH_p mesh, int idx)
 {
    double E_b, E_s, E_rs;
-   vector<double> energy;
+   vector<double> energy(3,0);
    int cm_idx, num_nbr;
 
    cm_idx = mesh.nghst * idx;
@@ -206,14 +208,16 @@ std::vector<double> McP::energy_mc_3d(Vec3d *pos, MESH_p mesh, int idx)
    E_s = steobj.stretch_energy_ipart(pos, (int *)(mesh.node_nbr_list + cm_idx),
                num_nbr, idx, mesh.nghst, mesh.bdry_type, mesh.boxlen, mesh.edge);
 
-   energy.push_back(E_b);
-   energy.push_back(E_s);
-   // Do not have if-else statements here.
+   energy[0]=E_b;
+   energy[1]=E_s;
+   // energy.push_back(E_b);
+   // energy.push_back(E_s);
+   // Try not to have if-else statements here.
    if (lipidobj.getcomp()>1){
       E_rs = lipidobj.reg_soln_ipart(pos, mesh, idx).x;
       E_rs += lipidobj.reg_soln_ipart_neighbour(pos, mesh, idx);  
+      energy[2] = E_rs;
    }
-   energy.push_back(E_rs);
    //   if(st_p.do_stick)
    //   E_stick = lj_bottom_surface(pos[idx].z, st_p.is_attractive[idx],
    //       st_p.pos_bot_wall, st_p.epsilon, st_p.sigma); 
@@ -262,6 +266,7 @@ int McP::monte_carlo_3d(Vec3d *pos, MESH_p mesh){
       ders=Efin[2]-Eini[2];
 
       de = debe+dest+ders;
+      // cout << debe << "\t"  << dest << "\t" << ders << endl;
       //
       vol_f = steobj.volume_ipart(pos,
                (int *) (mesh.node_nbr_list + cm_idx), num_nbr, idx,
@@ -304,7 +309,7 @@ int McP::monte_carlo_3d(Vec3d *pos, MESH_p mesh){
   return acceptedmoves;
 }
 //
-int McP::monte_carlo_fluid(Vec3d *pos, MESH_p mesh) {
+int McP::monte_carlo_fluid(Vec3d *pos, MESH_p mesh){
 
   int i, j, move;
   int nnbr_del1;
@@ -365,6 +370,7 @@ int McP::monte_carlo_fluid(Vec3d *pos, MESH_p mesh) {
     N_nbr_del2 = mesh.numnbr[idx_del2];
     N_nbr_add1 = mesh.numnbr[idx_add1];
     N_nbr_add2 = mesh.numnbr[idx_add2];
+
     bool flip_condt1, flip_condt2, flip_condt3;
     bool accept_flip;
 
@@ -420,3 +426,24 @@ int McP::monte_carlo_fluid(Vec3d *pos, MESH_p mesh) {
   }
   return move;
 }
+
+// int McP::monte_carlo_lipid(Vec3d *pos, MESH_p mesh){
+//    int exchngdmoves = 0;
+//    nframe = get_nstart(mesh.N, mesh.bdry_type);
+//    for (int i = 0; i < mesh.one_mc_iter; ++i){
+//       int idx_del1 = RandomGenerator::intUniform(nframe, mesh.N-1);
+//       int idxn = RandomGenerator::intUniform(0, mesh.nghst-1 );
+//       int nnbr_del1 = mesh.numnbr[idx_del1];
+//       int cm_idx_del1 = mesh.nghst * idx_del1;
+//       if (mesh.node_nbr_list[cm_idx_del1 + idxn] != -1) {
+//          idx_del2 = mesh.node_nbr_list[cm_idx_del1 + idxn];
+//          cm_idx_del2 = mesh.nghst * idx_del2;
+         
+//       }else {
+//          logic = false;
+//       }
+
+//    }
+       
+  
+// }

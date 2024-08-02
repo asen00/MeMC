@@ -5,7 +5,7 @@
 #include "multicomp.hpp"
 #include "vector.hpp"
 
-extern "C" void LipidRead(int *, double *, double *, char *);
+extern "C" void LipidRead(int *, double *, double *, double *, char *);
 
 void fillPoints(std::vector<int>& points, double fraction, int N){
    
@@ -28,8 +28,9 @@ int MulCom::initMulCom(int N, double av_bond_len, BE &bendobj, std::string fname
     parafile = fname+"/para_file.in";
     sprintf(tmp_fname, "%s", parafile.c_str() );
 
-    LipidRead(&ncomp, &kai, &lipfrac, tmp_fname);
-    epssqby2=(4-2*kai)*av_bond_len*av_bond_len;
+    LipidRead(&ncomp, &kai, &lipfrac, &epssqby2, tmp_fname);
+
+    cout << epssqby2 << endl;
 
     fillPoints(lipA, lipfrac, N);
    
@@ -130,17 +131,19 @@ void MulCom::phi_ipart_neighbour(double *phi, MESH_p mesh, int idx){
 Vec2d MulCom::reg_soln_ipart(Vec3d *pos, MESH_p mesh, int idx){
     /// TODO: Add interaction (kai*phi*(1-phi))
     int num_nbr = mesh.numnbr[idx];
-    double phi[1+num_nbr];
+    double phi[1+num_nbr], mixenergy=0;
     phi_ipart_neighbour(phi, mesh, idx);
     Vec2d grad_arr, out_array(0.0,0.0);
-    if(phi[0]==0||phi[0]==1) return out_array;
-    double mixenergy = phi[0]*log(phi[0]) + (1-phi[0])*log(1-phi[0])
-                        + kai*phi[0]*(1-phi[0]);
+    // if(phi[0]!=0&&phi[0]!=1){
+    //     mixenergy = phi[0]*log(phi[0]) + (1-phi[0])*log(1-phi[0])
+    //                     + kai*phi[0]*(1-phi[0]);
+    // }
     // phi has a size of 1+num_nbr. You can't access phi[idx]
     int cm_idx = idx*mesh.nghst;
     grad_arr = gradphi_sq(phi, pos, (int *)(mesh.node_nbr_list + cm_idx),
                 num_nbr, idx, mesh.bdry_type, mesh.boxlen, mesh.edge);
-    out_array.x = mixenergy + epssqby2*grad_arr.x; /// actual free energy
+    // out_array.x = mixenergy + 
+    out_array.x=epssqby2*grad_arr.x;  // actual free energy
     out_array.y = grad_arr.y;
     return out_array;
 }
