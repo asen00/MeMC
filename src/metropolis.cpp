@@ -111,6 +111,16 @@ int del_nbr(int *nbrs, int numnbr, int idx){
   logic = false;
   delete_here = 0;
 
+  //  for (int i = 0; i < numnbr; ++i){
+  //    if (nbrs[i]==nbrs[i+1]){
+  //       // cout << "delnbr=" << idx << " "<< nbrs[delete_here] <<endl;
+  //        for (int i = 0; i < numnbr; ++i){
+  //           cout << nbrs[i] << " ";
+  //        }
+  //        cout << endl;
+  //    }
+  // }
+
   // for(int i=0; i<numnbr+3; i++)printf("%d \n", nbrs[i]);
   // printf("\n\n");
 
@@ -124,61 +134,70 @@ int del_nbr(int *nbrs, int numnbr, int idx){
 
   // for(int i=0; i<numnbr+3; i++)printf("%d \n", nbrs[i]);
   // printf("\n\n");
-
   return numnbr - 1;
 }
 
 int add_nbr(int *nbrs, int numnbr, int idx, int i1, int i2) {
   // add int idx between i1 and i2 in the nbrs list
-  int insert_here;
-  bool logic;
+   int insert_here;
+   bool logic;
 
-  logic = false;
-  insert_here = 0;
+   logic = false;
+   insert_here = 0;
 
-  // for(int i=0; i<numnbr+3; i++)printf("%d \n", nbrs[i]);
-  //     printf("\n\n");
+   // for(int i=0; i<numnbr+3; i++)printf("%d \n", nbrs[i]);
+   //     printf("\n\n");
 
-  while (!logic) {
-    logic = (nbrs[insert_here] == i1) || (nbrs[insert_here] == i2);
-    ++insert_here;
-  }
+   // for (int i = 0; i < numnbr; ++i){
+   //   if (nbrs[i]==nbrs[i+1]){
+   //       // cout << "delnbr=" << idx << " "<< nbrs[delete_here] <<endl;
+   //       for (int i = 0; i < numnbr; ++i){
+   //          cout << nbrs[i] << " ";
+   //       }
+   //       cout << endl;
+   //   }
+   // }
 
-  logic = (nbrs[insert_here] == i1) || (nbrs[insert_here] == i2);
-  if (logic) {
-    memcpy(nbrs + insert_here, &nbrs[insert_here - 1],
+   while (!logic) {
+      logic = (nbrs[insert_here] == i1) || (nbrs[insert_here] == i2);
+      ++insert_here;
+   }
+
+   logic = (nbrs[insert_here] == i1) || (nbrs[insert_here] == i2);
+   if (logic) {
+      memcpy(nbrs + insert_here, &nbrs[insert_here - 1],
            sizeof(int) * (numnbr - insert_here + 1));
-    nbrs[insert_here] = idx;
-  } else {
-    insert_here = 0;
-    memcpy(nbrs + insert_here, &nbrs[insert_here - 1],
+      nbrs[insert_here] = idx;
+   }else {
+      insert_here = 0;
+      memcpy(nbrs + insert_here, &nbrs[insert_here - 1],
            sizeof(int) * (numnbr - insert_here + 1));
-    nbrs[insert_here] = idx;
-  }
+      nbrs[insert_here] = idx;
+   }
 
-  // for(int i=0; i<numnbr+3; i++)printf("%d \n", nbrs[i]);
-  //     printf("\n\n");
+   // for(int i=0; i<numnbr+3; i++)printf("%d \n", nbrs[i]);
+   //     printf("\n\n");
 
-  return numnbr + 1;
+   return numnbr + 1;
 }
 
-bool McP::Boltzman(double DE, double activity) {
-  /// @brief Metropolis algorithm
-  /// @param DE change in energy
-  /// @param kbt boltzmann constant times temperature
-  /// @return True if DE< 0 or the random number generated is less than
-  /// exp(-DE/kbt)
-  /// @details see
-  /// https://en.wikipedia.org/wiki/Metropolis%E2%80%93Hastings_algorithm
-  bool yes;
-  double rand;
-  DE += activity;
-  yes = (DE <= 0.e0);
-  if (!yes) {
-    rand = RandomGenerator::generateUniform(0.0,1.0);
-    yes = rand < exp(-DE / kBT);
-  }
-  return yes;
+bool McP::Boltzman(double DE, double activity){
+   /// @brief Metropolis algorithm
+   /// @param DE change in energy
+   /// @param kbt boltzmann constant times temperature
+   /// @return True if DE< 0 or the random number generated is less than
+   /// exp(-DE/kbt)
+   /// @details see
+   /// https://en.wikipedia.org/wiki/Metropolis%E2%80%93Hastings_algorithm
+   bool yes;
+   double rand;
+   DE += activity;
+   yes = (DE <= 0.e0);
+   if (!yes) {
+      rand = RandomGenerator::generateUniform(0.0,1.0);
+      yes = rand < exp(-DE / kBT);
+   }
+   return yes;
 }
 //
 bool McP::Glauber(double DE, double activity){
@@ -202,7 +221,7 @@ std::vector<double> McP::energy_mc_3d(Vec3d *pos, MESH_p mesh, int idx)
    cm_idx = mesh.nghst * idx;
    num_nbr = mesh.numnbr[idx];
 
-   E_b = beobj.bending_energy_ipart(pos, (int *)(mesh.node_nbr_list + cm_idx), 
+   E_b = beobj.bending_energy_ipart(pos, (int *)(mesh.node_nbr_list + cm_idx),
                num_nbr, idx, mesh.bdry_type, mesh.boxlen, mesh.edge);
    E_b += beobj.bending_energy_ipart_neighbour(pos, mesh, idx);
    E_s = steobj.stretch_energy_ipart(pos, (int *)(mesh.node_nbr_list + cm_idx),
@@ -214,8 +233,7 @@ std::vector<double> McP::energy_mc_3d(Vec3d *pos, MESH_p mesh, int idx)
    // energy.push_back(E_s);
    // Try not to have if-else statements here.
    if (lipidobj.getcomp()>1){
-      E_rs = lipidobj.reg_soln_ipart(pos, mesh, idx).x;
-      E_rs += lipidobj.reg_soln_ipart_neighbour(pos, mesh, idx);  
+      E_rs = lipidobj.gradphiener_ipart_all(pos, mesh, idx);
       energy[2] = E_rs;
    }
    //   if(st_p.do_stick)
@@ -248,13 +266,13 @@ int McP::monte_carlo_3d(Vec3d *pos, MESH_p mesh){
       auto Eini = energy_mc_3d(pos, mesh, idx);
       vol_i = steobj.volume_ipart(pos, (int *) (mesh.node_nbr_list + cm_idx),
                num_nbr, idx, mesh.bdry_type, mesh.boxlen, mesh.edge);
-       //
+      //
       x_o = pos[idx].x; y_o = pos[idx].y; z_o = pos[idx].z;
-       //
+      //
       dxinc = (dfac) * (RandomGenerator::generateUniform(-1.0,1.0));
       dyinc = (dfac) * (RandomGenerator::generateUniform(-1.0,1.0));
       dzinc = (dfac) * (RandomGenerator::generateUniform(-1.0,1.0));
-       //
+      //
       x_n = x_o + dxinc; y_n = y_o + dyinc; z_n = z_o + dzinc;
        //
       pos[idx].x = x_n; pos[idx].y = y_n; pos[idx].z = z_n;
@@ -272,7 +290,7 @@ int McP::monte_carlo_3d(Vec3d *pos, MESH_p mesh){
                (int *) (mesh.node_nbr_list + cm_idx), num_nbr, idx,
                mesh.bdry_type, mesh.boxlen, mesh.edge);
       dvol=0.5*(vol_f - vol_i);
-       //
+      //
       yes = Boltzman(de, 0.0);
        // if(steobj.dovol()){
        // //   de_vol = vol_energy_change(mbrane, vol_p, dvol);
@@ -292,7 +310,7 @@ int McP::monte_carlo_3d(Vec3d *pos, MESH_p mesh){
        //   yes = Glauber(de, 0.0);
        // }
        //
-      if(yes) {
+      if(yes){
          acceptedmoves +=  1;
          EneMonitored += de;
          VolMonitored += 2*dvol;
@@ -325,7 +343,7 @@ int McP::monte_carlo_fluid(Vec3d *pos, MESH_p mesh){
   int N_nbr_del2, N_nbr_del1;
   int N_nbr_add2, N_nbr_add1;
   double det1, det2;
-  Vec3d bef_ij, aft_ij;
+  Vec3d aft_ij;
 
   double KAPPA;
   double av_bond_len=mesh.av_bond_len;
@@ -340,7 +358,7 @@ int McP::monte_carlo_fluid(Vec3d *pos, MESH_p mesh){
     // identify the pair to be divorced
     // stored as idx_del1 and idx_del2
     logic = false;
-    while (!logic) {
+    while (!logic){
       idx_del1 = RandomGenerator::intUniform(nframe, mesh.N-1 );
       cm_idx_del1 = mesh.nghst * idx_del1;
       nnbr_del1 = mesh.numnbr[idx_del1];
@@ -356,94 +374,180 @@ int McP::monte_carlo_fluid(Vec3d *pos, MESH_p mesh){
       }else {
          logic = false;
       }
-    }
+   }
 
-    /* det1 = determinant(pos[idx_add1], pos[idx_add2], pos[idx_del1], mbrane.len); */
-    /* det2 = determinant(pos[idx_add1], pos[idx_add2], pos[idx_del2], mbrane.len); */
-    cm_idx_add1 = mesh.nghst * idx_add1;
-    cm_idx_add2 = mesh.nghst * idx_add2;
+   /* det1 = determinant(pos[idx_add1], pos[idx_add2], pos[idx_del1], mbrane.len); */
+   /* det2 = determinant(pos[idx_add1], pos[idx_add2], pos[idx_del2], mbrane.len); */
+   cm_idx_add1 = mesh.nghst * idx_add1;
+   cm_idx_add2 = mesh.nghst * idx_add2;
 
-    /* if (det1 * det2 < 0.0) { */
-    aft_ij = pos[idx_add2] - pos[idx_add1];
-    double dl = norm(aft_ij);
+   /* if (det1 * det2 < 0.0) { */
+   aft_ij = pos[idx_add2] - pos[idx_add1];
+   double dl = norm(aft_ij);
+    // if (dl==0){
+    //    cout << idx_add2 << " " << idx_add1 << endl;
+    // }
     N_nbr_del1 = mesh.numnbr[idx_del1];
     N_nbr_del2 = mesh.numnbr[idx_del2];
     N_nbr_add1 = mesh.numnbr[idx_add1];
     N_nbr_add2 = mesh.numnbr[idx_add2];
 
-    bool flip_condt1, flip_condt2, flip_condt3;
-    bool accept_flip;
+   bool flip_condt1, flip_condt2, flip_condt3;
+   bool accept_flip;
 
-    flip_condt1 = (dl < fac_len_vertices*av_bond_len);
-    flip_condt2 =  N_nbr_del1 > min_allowed_nbr && N_nbr_del2 > min_allowed_nbr;
-    flip_condt3 =  N_nbr_add1 < 9 && N_nbr_add2 < 9;
+   flip_condt1 = (dl < fac_len_vertices*av_bond_len);
+   flip_condt2 =  N_nbr_del1 > min_allowed_nbr && N_nbr_del2 > min_allowed_nbr;
+   flip_condt3 =  N_nbr_add1 < 9 && N_nbr_add2 < 9;
 
-    accept_flip = flip_condt1 && flip_condt2 && flip_condt3;
+   accept_flip = flip_condt1 && flip_condt2 && flip_condt3;
 
       if (accept_flip) {
-        move = move + 1;
-        /* print_sanity(pos, mesh.node_nbr_list+cm_idx_del1,
+         move = move + 1;
+         /* print_sanity(pos, mesh.node_nbr_list+cm_idx_del1,
          * mesh.node_nbr_list+cm_idx_del2, */
-        /*         mesh.node_nbr_list+cm_idx_add1,
+         /*    mesh.node_nbr_list+cm_idx_add1,
          * mesh.node_nbr_list+cm_idx_add2, */
-        /*         idx_del1, idx_del2, idx_add1, idx_add2, (char*)"bef", i); */
-        memcpy(nbr_del_1, &mesh.node_nbr_list[cm_idx_del1],
+         /*         idx_del1, idx_del2, idx_add1, idx_add2, 
+            (char*)"bef", i); */
+         memcpy(nbr_del_1, &mesh.node_nbr_list[cm_idx_del1],
                sizeof(int) * mesh.nghst);
-        memcpy(nbr_del_2, &mesh.node_nbr_list[cm_idx_del2],
+         memcpy(nbr_del_2, &mesh.node_nbr_list[cm_idx_del2],
                sizeof(int) * mesh.nghst);
-        memcpy(nbr_add_1, &mesh.node_nbr_list[cm_idx_add1],
+         memcpy(nbr_add_1, &mesh.node_nbr_list[cm_idx_add1],
                sizeof(int) * mesh.nghst);
-        memcpy(nbr_add_2, &mesh.node_nbr_list[cm_idx_add2],
+         memcpy(nbr_add_2, &mesh.node_nbr_list[cm_idx_add2],
                sizeof(int) * mesh.nghst);
 
         // form the bond
-        N_nbr_add1 = add_nbr(nbr_add_1, mesh.numnbr[idx_add1], idx_add2,
+         N_nbr_add1 = add_nbr(nbr_add_1, mesh.numnbr[idx_add1], idx_add2,
                              idx_del1, idx_del2);
-        N_nbr_add2 = add_nbr(nbr_add_2, mesh.numnbr[idx_add2], idx_add1,
+         N_nbr_add2 = add_nbr(nbr_add_2, mesh.numnbr[idx_add2], idx_add1,
                              idx_del1, idx_del2);
 
-        // get divorced
-        N_nbr_del1 = del_nbr(nbr_del_1, mesh.numnbr[idx_del1], idx_del2);
-        N_nbr_del2 = del_nbr(nbr_del_2, mesh.numnbr[idx_del2], idx_del1);
+         // get divorced
+         N_nbr_del1 = del_nbr(nbr_del_1, mesh.numnbr[idx_del1], idx_del2);
+         N_nbr_del2 = del_nbr(nbr_del_2, mesh.numnbr[idx_del2], idx_del1);
 
-        memcpy(mesh.node_nbr_list + cm_idx_del1, &nbr_del_1,
+         memcpy(mesh.node_nbr_list + cm_idx_del1, &nbr_del_1,
                sizeof(int) * mesh.nghst);
-        memcpy(mesh.node_nbr_list + cm_idx_del2, &nbr_del_2,
+         memcpy(mesh.node_nbr_list + cm_idx_del2, &nbr_del_2,
                sizeof(int) * mesh.nghst);
-        mesh.numnbr[idx_del1] = N_nbr_del1;
-        mesh.numnbr[idx_del2] = N_nbr_del2;
 
-        memcpy(mesh.node_nbr_list + cm_idx_add1, &nbr_add_1,
-               sizeof(int) * mesh.nghst);
-        memcpy(mesh.node_nbr_list + cm_idx_add2, &nbr_add_2,
-               sizeof(int) * mesh.nghst);
-        mesh.numnbr[idx_add1] = N_nbr_add1;
-        mesh.numnbr[idx_add2] = N_nbr_add2;
+         mesh.numnbr[idx_del1] = N_nbr_del1;
+         mesh.numnbr[idx_del2] = N_nbr_del2;
+         
+         // for (int j= 0; j < mesh.numnbr[idx_del1]; ++j){
+         //    if (mesh.node_nbr_list[cm_idx_del1+j] ==
+         //        mesh.node_nbr_list[cm_idx_del1+j+1]){
 
-            /* exit(0); */
+         //       // cout << "idx_del1=" << idx_del1 << " " <<
+         //       // nbr_del_1[j] << " " << nbr_del_1[j+1]
+         //       // << endl;
+         //    }
+         // }
+
+         // for (int j= 0; j < mesh.numnbr[idx_del2]; ++j){
+         //    if (mesh.node_nbr_list[cm_idx_del2+j] ==
+         //        mesh.node_nbr_list[cm_idx_del2+j+1]){
+         //       // cout << "idx_del2="<< idx_del2 << " " <<
+         //       // nbr_del_2[j] << " " << nbr_del_2[j+1]
+         //       // << endl;
+         //    }
+         // }
+
+         memcpy(mesh.node_nbr_list + cm_idx_add1, &nbr_add_1,
+               sizeof(int) * mesh.nghst);
+         memcpy(mesh.node_nbr_list + cm_idx_add2, &nbr_add_2,
+               sizeof(int) * mesh.nghst);
+
+         mesh.numnbr[idx_add1] = N_nbr_add1;
+         mesh.numnbr[idx_add2] = N_nbr_add2;
+
+         // for (int j= 0; j < mesh.numnbr[idx_add1]; ++j){
+         //    if (mesh.node_nbr_list[cm_idx_add1+j] ==
+         //        mesh.node_nbr_list[cm_idx_add1+j+1]){
+         //       // cout<< "idx_add1=" << idx_add1 << " "
+         //       // << nbr_add_1[j] << " " << nbr_add_1[j+1]
+         //       // << endl;
+         //    }
+         // }
+
+         // for (int j= 0; j < mesh.numnbr[idx_add2]; ++j){
+         //    if (mesh.node_nbr_list[cm_idx_add2+j] ==
+         //        mesh.node_nbr_list[cm_idx_add2+j+1]){
+         //       // cout<< "idx_add2=" << idx_add2 << " "
+         //       // << nbr_add_2[j] << " " << nbr_add_2[j+1]
+         //       // << endl;
+         //    }
+         // }
+
+
       }
     /* } */
   }
   return move;
 }
+//
+int McP::monte_carlo_lipid(Vec3d *pos, MESH_p mesh){
+   int exchngdmoves = 0;
+   int idx1, idx2, cm_idx1;
+   int nframe = get_nstart(mesh.N, mesh.bdry_type);
+   double Eini, Efin;
+   bool yes, logic;
+   int lip_idx1, lip_idx2, idxn, logic_break;
+   for (int i = 0; i < one_mc_iter; ++i){
+      logic = true;
+      idx1 = RandomGenerator::intUniform(nframe, mesh.N-1);
+      cm_idx1 = mesh.nghst * idx1;
+      idxn=0;
+      logic_break=0;
+      while(logic && idxn<mesh.numnbr[idx1]){
+         idx2 = mesh.node_nbr_list[cm_idx1+idxn];
+         logic = lipidobj.lipA[idx1] == lipidobj.lipA[idx2];
+         ++idxn;
+      }
 
-// int McP::monte_carlo_lipid(Vec3d *pos, MESH_p mesh){
-//    int exchngdmoves = 0;
-//    nframe = get_nstart(mesh.N, mesh.bdry_type);
-//    for (int i = 0; i < mesh.one_mc_iter; ++i){
-//       int idx_del1 = RandomGenerator::intUniform(nframe, mesh.N-1);
-//       int idxn = RandomGenerator::intUniform(0, mesh.nghst-1 );
-//       int nnbr_del1 = mesh.numnbr[idx_del1];
-//       int cm_idx_del1 = mesh.nghst * idx_del1;
-//       if (mesh.node_nbr_list[cm_idx_del1 + idxn] != -1) {
-//          idx_del2 = mesh.node_nbr_list[cm_idx_del1 + idxn];
-//          cm_idx_del2 = mesh.nghst * idx_del2;
-         
-//       }else {
-//          logic = false;
-//       }
+      // idxn=RandomGenerator::intUniform(0, mesh.numnbr[idx1]-1);
+      // idx2 = mesh.node_nbr_list[cm_idx1+idxn];
+      // logic = lipidobj.lipA[idx1] == lipidobj.lipA[idx2];
+      
 
-//    }
-       
-  
-// }
+      // if (logic_break==2*mesh.nghst)
+      // {
+      //    for (int idxn = 0; idxn < mesh.numnbr[idx1]; ++idxn){
+      //       idx2 = mesh.node_nbr_list[cm_idx1+idxn];
+            
+      //    }
+      //    cout << endl;
+      // }
+
+      if (!logic){
+
+         lip_idx1 = lipidobj.lipA[idx1];
+         lip_idx2 = lipidobj.lipA[idx2];
+
+         Eini = lipidobj.reg_soln_ipart(pos, mesh, idx1).x;
+         Eini += lipidobj.reg_soln_ipart_neighbour(pos, mesh, idx1);
+         Eini += lipidobj.reg_soln_ipart(pos, mesh, idx2).x;
+         Eini += lipidobj.reg_soln_ipart_neighbour(pos, mesh, idx2);
+
+         lipidobj.lipA[idx2] = lip_idx1;
+         lipidobj.lipA[idx1] = lip_idx2;
+
+         Efin = lipidobj.reg_soln_ipart(pos, mesh, idx1).x;
+         Efin += lipidobj.reg_soln_ipart_neighbour(pos, mesh, idx1);
+         Efin += lipidobj.reg_soln_ipart(pos, mesh, idx2).x;
+         Efin += lipidobj.reg_soln_ipart_neighbour(pos, mesh, idx2);
+
+         yes = Boltzman(Efin-Eini, 0.0);
+         // cout << exp(-Efin+Eini) << endl;
+         if (yes){
+            ++exchngdmoves;
+         }else{
+            lipidobj.lipA[idx1] = lip_idx1;
+            lipidobj.lipA[idx2] = lip_idx2;
+         }
+      }
+   }
+   return exchngdmoves;
+}

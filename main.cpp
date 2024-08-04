@@ -126,7 +126,7 @@ int main(int argc, char *argv[]){
     pid_t pid = getpid();
     std::string fname;
     uint32_t seed_v;
-    int iter, start, num_moves, num_bond_change, recaliter;
+    int iter, start, num_moves, num_bond_change, recaliter, num_exchange;
     double av_bond_len, Etot, radius;
     BE bendobj;
     STE stretchobj;
@@ -143,6 +143,7 @@ int main(int argc, char *argv[]){
     // Check if the file opened successfully
     //
     seed_v = (uint32_t) (mpi_rank + time(0));
+    // seed_v=42
     RandomGenerator::init(seed_v);
     //
     para_file = outfolder+"/para_file.in";
@@ -167,12 +168,10 @@ int main(int argc, char *argv[]){
     
     clock_t timer;
     Etot = mcobj.evalEnergy(Pos, mesh);
-    cout << Etot << endl;
-    exit(1);
     mcobj.write_energy(fileptr, iter);
 
     fstream outfile_terminal(outfolder+"/terminal.out", ios::app);
-    cout << "# The seed value is " << seed_v << endl;
+    outfile_terminal << "# The seed value is " << seed_v << endl;
     if(!mcobj.isrestart()) diag_wHeader(bendobj, stretchobj, fileptr);
     if(mcobj.isrestart()) fileptr << "# Restart index " << residx << endl;
 
@@ -187,18 +186,23 @@ int main(int argc, char *argv[]){
             restartfile.close();
         }
         num_moves = mcobj.monte_carlo_3d(Pos, mesh);
+        // num_exchange = mcobj.monte_carlo_lipid(Pos, mesh);
         if(!(iter % recaliter)){
             Etot = mcobj.evalEnergy(Pos, mesh);
-            cout << "iter = " << iter << "; Accepted Moves = " << (double)num_moves * 100 / mcobj.onemciter() << " %;"
+            outfile_terminal << "iter = " << iter << 
+            "; Accepted Moves = " << (double)num_moves*100/mcobj.onemciter() 
+            << " %;"
+            "; Exchanged Moves = " << (double)num_exchange * 100 / mcobj.onemciter()
+            << " %;"
             << " totalener = " << Etot << "; volume = " << mcobj.getvolume() << endl;
         }
         if (mcobj.isfluid() && !(iter % mcobj.fluidizeevery())) {
             num_bond_change = mcobj.monte_carlo_fluid(Pos, mesh);
-            cout << "fluid stats " << num_bond_change << " bonds flipped" << endl;
+            outfile_terminal << "fluid stats " << num_bond_change << " bonds flipped" << endl;
         }
         mcobj.write_energy(fileptr, iter);
     }
-    cout << "Total time taken = " << (clock()-timer)/CLOCKS_PER_SEC << "s" << endl;
+    outfile_terminal << "Total time taken = " << (clock()-timer)/CLOCKS_PER_SEC << "s" << endl;
     outfile_terminal.close();
     fileptr.close();
     free(Pos);

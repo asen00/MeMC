@@ -128,6 +128,30 @@ void MulCom::phi_ipart_neighbour(double *phi, MESH_p mesh, int idx){
     }
 }
 //
+double MulCom::gradphisq_ipart(Vec3d *pos, MESH_p mesh, int idx){
+    Vec2d grad_arr;
+    int num_nbr = mesh.numnbr[idx];
+    double phi[1+num_nbr];
+    phi_ipart_neighbour(phi, mesh, idx);
+    int cm_idx = mesh.nghst*idx;
+    return  gradphi_sq(phi, pos, (int *)(mesh.node_nbr_list + cm_idx),
+                num_nbr, idx, mesh.bdry_type, mesh.boxlen, mesh.edge).x;
+}
+//
+double MulCom::gradphisq_ipart_neighbour(Vec3d *pos, MESH_p mesh, int idx){
+    int j, nbr;
+    double regsol_ar=0e0;
+    for (j = idx*mesh.nghst; j < idx*mesh.nghst + mesh.numnbr[idx]; j++){
+        nbr = mesh.node_nbr_list[j];
+        regsol_ar += gradphisq_ipart(pos, mesh, nbr);
+   }
+   return regsol_ar;
+}
+//
+double MulCom::gradphiener_ipart_all(Vec3d *pos, MESH_p mesh, int idx){
+    return epssqby2*gradphisq_ipart_neighbour(pos,mesh,idx);
+}
+//
 Vec2d MulCom::reg_soln_ipart(Vec3d *pos, MESH_p mesh, int idx){
     /// TODO: Add interaction (kai*phi*(1-phi))
     int num_nbr = mesh.numnbr[idx];
@@ -138,13 +162,20 @@ Vec2d MulCom::reg_soln_ipart(Vec3d *pos, MESH_p mesh, int idx){
     //     mixenergy = phi[0]*log(phi[0]) + (1-phi[0])*log(1-phi[0])
     //                     + kai*phi[0]*(1-phi[0]);
     // }
+    if(phi[0]!=0&&phi[0]!=1){
+        mixenergy = phi[0]*log(phi[0]) + (1-phi[0])*log(1-phi[0])
+                    + kai*phi[0]*(1-phi[0]);
+    }
+    // mixenergy = mixenergy/(phi[0]*(1-phi[0]));
     // phi has a size of 1+num_nbr. You can't access phi[idx]
     int cm_idx = idx*mesh.nghst;
     grad_arr = gradphi_sq(phi, pos, (int *)(mesh.node_nbr_list + cm_idx),
                 num_nbr, idx, mesh.bdry_type, mesh.boxlen, mesh.edge);
-    // out_array.x = mixenergy + 
-    out_array.x=epssqby2*grad_arr.x;  // actual free energy
+    out_array.x = mixenergy + epssqby2*grad_arr.x;
     out_array.y = grad_arr.y;
+    // if (isnan(out_array.x)){
+    //     cout << idx << endl;
+    // }
     return out_array;
 }
 //

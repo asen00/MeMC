@@ -73,7 +73,7 @@ double BE::bending_energy_ipart(Vec3d *pos, int *node_nbr, int num_nbr, int idx,
         for (int j = 0; j < num_nbr; ++j){
             jdx = node_nbr[j];
             kdx = node_nbr[(j+1)%num_nbr]; // this is same as kdx
-            xij[j] = diff_pbc(pos[idx],pos[jdx], lenth);
+            xij[j] = diff_pbc(pos[idx],pos[jdx],lenth);
             xjk =  diff_pbc(pos[jdx],pos[kdx], lenth);
             lijsq[j] = inner_product(xij[j],xij[j]);
             ljksq[j] = inner_product(xjk,xjk);
@@ -135,8 +135,8 @@ double BE::bending_energy_ipart_neighbour(Vec3d *pos, MESH_p mesh, int idx){
 double BE::bending_energy_total(Vec3d *pos, MESH_p mesh){
     /// @brief Estimate the total Bending energy
     ///  @param Pos array containing co-ordinates of all the particles
-    ///  @param mesh mesh related parameters -- connections and neighbours
-    /// information;
+    /// @param mesh mesh related parameters -- connections and 
+    /// neighbours information;
     ///  @param para  Membrane related parameters;
     /// @return Total Bending energy
     int idx, st_idx;
@@ -152,6 +152,7 @@ double BE::bending_energy_total(Vec3d *pos, MESH_p mesh){
         be += bending_energy_ipart(pos, (int *) (mesh.node_nbr_list + cm_idx), 
                 num_nbr, idx, mesh.bdry_type, mesh.boxlen, mesh.edge);
     }
+    // cout << be << endl;
     return be;
 }
 /*-------------------------------------------------------------------------------------*/

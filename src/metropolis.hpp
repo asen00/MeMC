@@ -16,6 +16,7 @@ public :
   int monte_carlo_3d(Vec3d *pos, MESH_p mesh);
   std::vector<double> energy_mc_3d(Vec3d *pos, MESH_p mesh, int);
   int monte_carlo_fluid(Vec3d *, MESH_p);
+  int monte_carlo_lipid(Vec3d *pos, MESH_p mesh);
   bool Boltzman(double DE, double activity);
   bool Glauber(double DE, double activity);
   int initMC(int, std::string);
@@ -49,5 +50,4 @@ private:
   double volt0;
   int acceptedmoves;
 };
-
 #endif
