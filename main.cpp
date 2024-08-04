@@ -72,10 +72,10 @@ double start_simulation(Vec3d *Pos, MESH_p &mesh, McP mcobj, STE &stretchobj,
         mesh.boxlen=get_box_dim(Pos, mesh).first*(1+1/sqrt(mesh.N));
     }
     else{
-        mesh.topology="sphere"; 
-        // cout << "sphere" << endl;
+        mesh.topology="sphere";
         mesh.edge = 0;
         mesh.boxlen=0;
+        mesh.bdry_type=2;   // Sphere always has a pbc.
     }
 
     ave_bond_len = stretchobj.init_eval_lij_t0(Pos, mesh, mcobj.isfluid(),
