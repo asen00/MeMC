@@ -66,7 +66,6 @@ double start_simulation(Vec3d *Pos, MESH_p &mesh, McP mcobj, STE &stretchobj,
 
     if (isPlaner(Pos,mesh.N)){
         mesh.topology="flat";
-        cout << "flat" << endl;
         mesh.edge = get_nstart(mesh.N, 1);
         // To make sure that the edges do not coincide after pbc.
         mesh.boxlen=get_box_dim(Pos, mesh).first*(1+1/sqrt(mesh.N));
@@ -178,18 +177,19 @@ int main(int argc, char *argv[]){
     for(iter=residx; iter < mcobj.totaliter(); iter++){
         if(iter%mcobj.dumpskip() == 0){
             outfile=outfolder+"/snap_"+ZeroPadNumber(iter/mcobj.dumpskip())+".h5";
-            hdf5_io_write_double((double*) Pos, 3*mesh.N, outfile, "pos");
+            hdf5_io_write((double*) Pos, 3*mesh.N, outfile, "pos");
             hdf5_io_write_mesh(mesh.numnbr, mesh.node_nbr_list,
-                            mesh.N, mesh.nghst, outfile);
+                                mesh.N, mesh.nghst, outfile);
+            hdf5_io_write(lipidobj.lipA.data(), mesh.N, outfile, "lip");
             fstream restartfile(outfolder+"/restartindex.txt", ios::out);
             restartfile << iter << " " << mcobj.dumpskip() << endl;
             restartfile.close();
         }
         num_moves = mcobj.monte_carlo_3d(Pos, mesh);
-        // num_exchange = mcobj.monte_carlo_lipid(Pos, mesh);
+        num_exchange = mcobj.monte_carlo_lipid(Pos, mesh);
         if(!(iter % recaliter)){
             Etot = mcobj.evalEnergy(Pos, mesh);
-            outfile_terminal << "iter = " << iter << 
+            cout << "iter = " << iter << 
             "; Accepted Moves = " << (double)num_moves*100/mcobj.onemciter() 
             << " %;"
             "; Exchanged Moves = " << (double)num_exchange * 100 / mcobj.onemciter()
@@ -198,7 +198,7 @@ int main(int argc, char *argv[]){
         }
         if (mcobj.isfluid() && !(iter % mcobj.fluidizeevery())) {
             num_bond_change = mcobj.monte_carlo_fluid(Pos, mesh);
-            outfile_terminal << "fluid stats " << num_bond_change << " bonds flipped" << endl;
+            cout << "fluid stats " << num_bond_change << " bonds flipped" << endl;
         }
         mcobj.write_energy(fileptr, iter);
     }

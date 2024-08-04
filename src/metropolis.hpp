@@ -11,8 +11,8 @@
 #include "multicomp.hpp"
 class McP{
 public : 
-  McP (BE &beobj, STE &steobj, MulCom &lipidobj): 
-  beobj(beobj), steobj(steobj), lipidobj(lipidobj) {};
+   McP (BE &beobj, STE &steobj, MulCom &lipidobj):
+   beobj(beobj), steobj(steobj), lipidobj(lipidobj) {};
   int monte_carlo_3d(Vec3d *pos, MESH_p mesh);
   std::vector<double> energy_mc_3d(Vec3d *pos, MESH_p mesh, int);
   int monte_carlo_fluid(Vec3d *, MESH_p);

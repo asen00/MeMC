@@ -499,30 +499,25 @@ int McP::monte_carlo_lipid(Vec3d *pos, MESH_p mesh){
       logic = true;
       idx1 = RandomGenerator::intUniform(nframe, mesh.N-1);
       cm_idx1 = mesh.nghst * idx1;
+
       idxn=0;
       logic_break=0;
-      while(logic && idxn<mesh.numnbr[idx1]){
+      while(logic && logic_break<2*mesh.nghst){
+         idxn = RandomGenerator::intUniform(0, mesh.nghst-1);
          idx2 = mesh.node_nbr_list[cm_idx1+idxn];
-         logic = lipidobj.lipA[idx1] == lipidobj.lipA[idx2];
-         ++idxn;
+         if (idx2!=-1){
+            logic = lipidobj.lipA[idx1] == lipidobj.lipA[idx2];
+         }
+         ++logic_break;
       }
 
-      // idxn=RandomGenerator::intUniform(0, mesh.numnbr[idx1]-1);
+      // idxn=RandomGenerator::intUniform(0, mesh.nghst-1);
       // idx2 = mesh.node_nbr_list[cm_idx1+idxn];
-      // logic = lipidobj.lipA[idx1] == lipidobj.lipA[idx2];
-      
-
-      // if (logic_break==2*mesh.nghst)
-      // {
-      //    for (int idxn = 0; idxn < mesh.numnbr[idx1]; ++idxn){
-      //       idx2 = mesh.node_nbr_list[cm_idx1+idxn];
-            
-      //    }
-      //    cout << endl;
+      // if (idx2!=-1){
+      //    logic = lipidobj.lipA[idx1] == lipidobj.lipA[idx2];
       // }
 
       if (!logic){
-
          lip_idx1 = lipidobj.lipA[idx1];
          lip_idx2 = lipidobj.lipA[idx2];
 
